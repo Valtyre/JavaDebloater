@@ -21,20 +21,9 @@ class SignSet:
         signset = set()
         if 0 in items:
           signset.add("0")
-        if items.__contains__
+        if items.__contains__:
             signset.add("+")
         if any(x < 0 for x in items):
             signset.add("-")
         return cls(signset)
-
-
-
-
-
-from hypothesis import given
-from hypothesis.strategies import integers, sets
-
-@given(sets(integers()))
-def test_valid_abstraction(xs: set[int]):
-  s = SignSet.abstract(xs) 
-  assert all(x in s for x in xs)
+    

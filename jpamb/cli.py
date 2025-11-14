@@ -651,6 +651,7 @@ def build(suite, compile, decompile, document, test, docker):
 
     if test:
         log.info("Testing")
+        log.Success(f"Suite: {suite}")
 
         for case in suite.cases:
             log.info(f"Testing {case}")

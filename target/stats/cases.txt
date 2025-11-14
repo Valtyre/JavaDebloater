@@ -36,6 +36,7 @@ jpamb.cases.Simple.assertInteger:(I)V                        (0) -> assertion er
 jpamb.cases.Simple.assertInteger:(I)V                        (1) -> ok
 jpamb.cases.Simple.assertPositive:(I)V                       (-1) -> assertion error
 jpamb.cases.Simple.assertPositive:(I)V                       (1) -> ok
+jpamb.cases.Simple.assertTrue:()V                            () -> ok
 jpamb.cases.Simple.checkBeforeAssert:(I)V                    (-1) -> assertion error
 jpamb.cases.Simple.checkBeforeAssert:(I)V                    (0) -> ok
 jpamb.cases.Simple.checkBeforeDivideByN2:(I)I                (0) -> ok

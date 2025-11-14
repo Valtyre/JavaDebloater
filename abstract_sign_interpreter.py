@@ -3,6 +3,8 @@ from jpamb import jvm
 from dataclasses import dataclass
 import copy
 
+import sign
+
 import sys
 from loguru import logger
 
@@ -118,12 +120,15 @@ def step(state: State) -> State | str:
             frame.pc += 1
             return state
 
-        case jvm.ArrayLoad(type=jvm.Int()):
+        case jvm.ArrayLoad():
             index = frame.stack.pop().value
             arr = frame.stack.pop()
             if not isinstance(arr, list):
                 raise RuntimeError(f"Expected array, got {arr}")
-            if index < 0 or index >= len(arr):
+            if isinstance(index, sign.SignSet):
+                frame.pc += 1
+                return state
+            elif index < 0 or index >= len(arr):
                 return "out of bounds"
             frame.stack.push(jvm.Value.int(arr[index]))
             frame.pc += 1
@@ -149,14 +154,14 @@ def step(state: State) -> State | str:
             frame.pc += 1
             return state
         
+        ### Integer operations
+
         case jvm.Incr(index=i, amount=amt):
             v = frame.locals[i]
-            assert v.type is jvm.Int(), f"expected int in local {i}, got {v}"
-            frame.locals[i] = jvm.Value.int(v.value + amt)
+            s: sign.SignSet = sign.SignSet(v.value)
+            frame.locals[i] = s.abstract({x + amt for x in s})
             frame.pc += 1
             return state
-
-        
         
         case jvm.Binary(type=jvm.Int(), operant=oper):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
