@@ -29,7 +29,18 @@ jpamb.cases.Loops.forever:()V                                () -> *
 jpamb.cases.Loops.neverAsserts:()V                           () -> *
 jpamb.cases.Loops.neverDivides:()I                           () -> *
 jpamb.cases.Loops.terminates:()V                             () -> assertion error
+jpamb.cases.Signs.addSigns:(II)V                             (-5, -5) -> ok
+jpamb.cases.Signs.addSigns:(II)V                             (5, -5) -> ok
+jpamb.cases.Signs.addSigns:(II)V                             (5, 5) -> ok
+jpamb.cases.Signs.classifySign:(I)V                          (-5) -> ok
+jpamb.cases.Signs.classifySign:(I)V                          (0) -> ok
+jpamb.cases.Signs.classifySign:(I)V                          (5) -> ok
+jpamb.cases.Signs.requirePositive:(I)V                       (-5) -> assertion error
+jpamb.cases.Signs.requirePositive:(I)V                       (0) -> assertion error
+jpamb.cases.Signs.requirePositive:(I)V                       (5) -> ok
+jpamb.cases.Signs.returnNegative:()I                         () -> ok
 jpamb.cases.Signs.returnPositive:()I                         () -> ok
+jpamb.cases.Signs.returnZero:()I                             () -> ok
 jpamb.cases.Simple.assertBoolean:(Z)V                        (false) -> assertion error
 jpamb.cases.Simple.assertBoolean:(Z)V                        (true) -> ok
 jpamb.cases.Simple.assertFalse:()V                           () -> assertion error
