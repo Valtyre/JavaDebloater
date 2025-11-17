@@ -1,12 +1,11 @@
 package jpamb.cases;
 
-import jpamb.utils.*;
-import static jpamb.utils.Tag.TagType.*;
+import jpamb.utils.Case;
+
 
 public class Signs {
 
-    @Case("() -> {+}")
-    @Tag({ INTEGER_OVERFLOW })
+    @Case("() -> ok")
     public static int returnPositive() {
         return 1;
     }

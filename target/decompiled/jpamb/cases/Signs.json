@@ -7,19 +7,7 @@
   "bootstrapmethods": [],
   "enclosingmethod": null,
   "fields": [],
-  "innerclasses": [
-    {
-      "access": [
-        "public",
-        "static",
-        "final",
-        "enum"
-      ],
-      "class": "jpamb/utils/Tag$TagType",
-      "name": "TagType",
-      "outer": "jpamb/utils/Tag"
-    }
-  ],
+  "innerclasses": [],
   "interfaces": [],
   "methods": [
     {
@@ -90,28 +78,7 @@
           "values": {
             "value": {
               "type": "string",
-              "value": "() -> {+}"
-            }
-          }
-        },
-        {
-          "is_runtime_visible": true,
-          "type": "jpamb/utils/Tag",
-          "values": {
-            "value": {
-              "type": "array",
-              "value": [
-                {
-                  "type": "enum",
-                  "value": {
-                    "name": "INTEGER_OVERFLOW",
-                    "type": {
-                      "kind": "class",
-                      "name": "jpamb/utils/Tag$TagType"
-                    }
-                  }
-                }
-              ]
+              "value": "() -> ok"
             }
           }
         }
@@ -136,7 +103,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 11,
+            "line": 10,
             "offset": 0
           }
         ],

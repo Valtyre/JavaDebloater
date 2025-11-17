@@ -17,12 +17,12 @@ import jpamb.cases.*;
  */
 public class Runtime {
   static List<Class<?>> caseclasses = List.of(
-      Simple.class,
-      Loops.class,
-      Tricky.class,
-      jpamb.cases.Arrays.class,
-      BenniTest.class,
-      Calls.class);
+    Simple.class,
+    Loops.class,
+    Tricky.class,
+    jpamb.cases.Arrays.class,
+    Calls.class,
+    Signs.class);
 
   public static Case[] cases(Method m) {
     var cases = m.getAnnotation(Cases.class);
