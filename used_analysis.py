@@ -123,7 +123,7 @@ def main() -> None:
             case UseStatus.NOT_USED:
                 tag = "is not used"
 
-        print(f"{m} -> {tag} (reachable pcs: {sorted(info.reachable_pcs)})")
+        print(f"{m} -> {tag} (at PCs: {sorted(info.reachable_pcs)})")
 
 
 if __name__ == "__main__":
