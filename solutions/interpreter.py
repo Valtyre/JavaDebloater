@@ -1,6 +1,7 @@
 import jpamb
 from jpamb import jvm
 from dataclasses import dataclass
+import copy
 
 import sys
 from loguru import logger
@@ -9,6 +10,7 @@ logger.remove()
 logger.add(sys.stderr, format="[{level}] {message}")
 
 methodid, input = jpamb.getcase()
+
 
 
 @dataclass
@@ -106,30 +108,272 @@ def step(state: State) -> State | str:
             frame.stack.push(v)
             frame.pc += 1
             return state
-        case jvm.Load(type=jvm.Int(), index=i):
-            frame.stack.push(frame.locals[i])
+        
+        case jvm.Load(type=t, index=i):
+            v = frame.locals[i]
+            if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference):
+                frame.stack.push(v)
+            else:
+                raise NotImplementedError(f"Unhandled load type: {t}")
             frame.pc += 1
             return state
-        case jvm.Binary(type=jvm.Int(), operant=jvm.BinaryOpr.Div):
+
+        case jvm.ArrayLoad(type=t):
+            index = frame.stack.pop().value
+            arr = frame.stack.pop()
+
+
+            if isinstance(arr, jvm.Value) and arr.value is None:
+                return "null pointer"
+            
+            if index < 0 or index >= len(arr.value if isinstance(arr, jvm.Value) else arr):
+                return "out of bounds"
+            
+            if isinstance(t, jvm.Char):
+               frame.stack.push(
+                   jvm.Value.int(
+                       ord((arr.value if isinstance(arr, jvm.Value) else arr)[index])
+                   )
+               )
+
+            elif isinstance(t, jvm.Int):
+                frame.stack.push(
+                    jvm.Value.int(
+                        (arr.value if isinstance(arr, jvm.Value) else arr)[index]
+                    )
+                )
+
+            
+            frame.pc += 1
+            return state
+
+        case jvm.ArrayStore(type=jvm.Int()):
+            val = frame.stack.pop()
+            index = frame.stack.pop().value
+            arr = frame.stack.pop()
+
+            if isinstance(arr, jvm.Value) and arr.value is None:
+                return "null pointer"
+            if index < 0 or index >= len(arr.value if isinstance(arr, jvm.Value) else arr):
+                return "out of bounds"
+            
+            if not isinstance(arr, list):
+                raise RuntimeError(f"Expected array, got {arr}")
+
+            arr[index] = val.value
+            frame.pc += 1
+            return state
+        
+        case jvm.ArrayLength():
+            arr = frame.stack.pop()
+            
+            if isinstance(arr, jvm.Value) and arr.value is None:
+                return "null pointer"
+            frame.stack.push(jvm.Value.int(len(arr.value if isinstance(arr, jvm.Value) else arr)))
+            frame.pc += 1
+            return state
+        
+        case jvm.Incr(index=i, amount=amt):
+            v = frame.locals[i]
+            assert v.type is jvm.Int(), f"expected int in local {i}, got {v}"
+            frame.locals[i] = jvm.Value.int(v.value + amt)
+            frame.pc += 1
+            return state
+
+        
+        
+        case jvm.Binary(type=jvm.Int(), operant=oper):
+
+
+
             v2, v1 = frame.stack.pop(), frame.stack.pop()
             assert v1.type is jvm.Int(), f"expected int, but got {v1}"
             assert v2.type is jvm.Int(), f"expected int, but got {v2}"
-            if v2.value == 0:
-                return "divide by zero"
+            if oper == jvm.BinaryOpr.Div:
+                if v2.value == 0:
+                    return "divide by zero"
+                res = v1.value // v2.value
+            elif oper == jvm.BinaryOpr.Add:
+                res = v1.value + v2.value
+            elif oper == jvm.BinaryOpr.Sub:
+                res = v1.value - v2.value
+            elif oper == jvm.BinaryOpr.Mul:
+                res = v1.value * v2.value
+            elif oper == jvm.BinaryOpr.Rem:
+                if v2.value == 0:
+                    return "divide by zero"
+                res = v1.value % v2.value
+            else:
+                raise NotImplementedError(f"Unhandled integer binary op: {oper}")
 
-            frame.stack.push(jvm.Value.int(v1.value // v2.value))
+            frame.stack.push(jvm.Value.int(res))
             frame.pc += 1
             return state
         case jvm.Return(type=jvm.Int()):
             v1 = frame.stack.pop()
             state.frames.pop()
             if state.frames:
-                frame = state.frames.peek()
-                frame.stack.push(v1)
-                frame.pc += 1
+                state.frames.peek().stack.push(v1)
                 return state
             else:
                 return "ok"
+            
+        case jvm.Return(type=jvm.Reference()):
+            v1 = frame.stack.pop()
+            state.frames.pop()
+            if state.frames:
+                state.frames.peek().stack.push(v1)
+                return state
+            else:
+                return "ok"
+        
+        case jvm.Return(type=None):
+            state.frames.pop()
+            if state.frames:
+                return state
+            else:
+                return "ok"
+        case jvm.New(classname=classname):
+            frame.stack.push(classname)
+            frame.pc += 1
+            return state 
+        
+        case jvm.InvokeSpecial(method=method):
+            frame.pc += 1
+            return state       
+        
+        case jvm.InvokeStatic(method=method):
+            arg_count = len(method.methodid.params._elements)
+            args = []
+            for _ in range(arg_count):
+                args.append(frame.stack.pop())
+            args.reverse()
+
+            newframe = Frame.from_method(method)
+            for i, arg in enumerate(args):
+                newframe.locals[i] = arg
+
+            state.frames.push(newframe)
+            frame.pc += 1
+
+            return state
+        
+        case jvm.Throw():
+            v1 = frame.stack.pop()
+            if str(v1) == "java/lang/AssertionError":
+                return "assertion error"
+            return str(v1)
+
+        case jvm.Dup():
+            if not frame.stack:
+                raise RuntimeError("stack underflow on dup")
+            v = frame.stack.peek()
+            frame.stack.push(v)   # push the same reference/value
+            frame.pc += 1
+            return state
+
+
+        case jvm.Store(type=t, index=i):
+            v = frame.stack.pop()
+            if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference):
+                frame.locals[i] = v
+            
+            
+            else:
+                raise NotImplementedError(f"Unhandled store type: {t}")
+            frame.pc += 1
+            return state
+   
+        case jvm.Get(field=field):
+            assert (field.extension.name == "$assertionsDisabled"), f"unknown field {field}"
+            frame.stack.push(jvm.Value.boolean(False))
+            frame.pc += 1
+            return state
+        case jvm.Ifz(condition=cond, target=target):
+            v = frame.stack.pop()
+            assert v.type in (jvm.Int(), jvm.Boolean()), f"expected int/bool, got {v}"
+
+            take_branch = False
+            if cond == "eq":
+                take_branch = (v.value == 0)
+            elif cond == "ne":
+                take_branch = (v.value != 0)
+            elif cond == "lt":
+                take_branch = (v.value < 0)
+            elif cond == "ge":
+                take_branch = (v.value >= 0)
+            elif cond == "gt":
+                take_branch = (v.value > 0)
+            elif cond == "le":
+                take_branch = (v.value <= 0)
+            else:
+                raise NotImplementedError(f"Unhandled ifz condition: {cond}")
+
+            if take_branch:
+                frame.pc = PC(frame.pc.method, target)
+            else:
+                frame.pc += 1
+            return state
+
+        case jvm.If(condition=cond, target=target):
+            v2 = frame.stack.pop()
+            v1 = frame.stack.pop()
+
+            if v1.type is jvm.Char():
+                v1 = jvm.Value.int(v1.value)
+            if v2.type is jvm.Char():
+                v2 = jvm.Value.int(v2.value)
+
+            assert v1.type is jvm.Int() and v2.type is jvm.Int()
+
+
+            take_branch = False
+            if cond == "eq":
+                take_branch = (v1.value == v2.value)
+            elif cond == "ne":
+                take_branch = (v1.value != v2.value)
+            elif cond == "lt":
+                take_branch = (v1.value < v2.value)
+            elif cond == "ge":
+                take_branch = (v1.value >= v2.value)
+            elif cond == "gt":
+                take_branch = (v1.value > v2.value)
+            elif cond == "le":
+                take_branch = (v1.value <= v2.value)
+            else:
+                raise NotImplementedError(f"Unhandled If condition: {cond}")
+
+            if take_branch:
+                frame.pc = PC(frame.pc.method, target)
+            else:
+                frame.pc += 1
+            return state
+        
+        case jvm.Goto(target=t):
+            assert isinstance(t, int), f"unknown target {t}"
+            frame.pc = PC(frame.pc.method, t)
+            return state
+        
+        case jvm.Cast(from_=from_, to_ = to_):
+            v1 = frame.stack.pop()
+            i = v1.value
+            frame.pc += 1
+            match to_:
+                case jvm.Short():
+                    frame.stack.push(i)
+                case _:
+                    raise NotImplementedError(f"Unhandled If condition: {cond}")
+            return state
+        
+        case jvm.NewArray(type=t, dim=1):
+            size = frame.stack.pop().value
+            if size < 0:
+                return "out of bounds"
+            arr = [0] * size
+            frame.stack.push(arr)
+            frame.pc += 1
+            return state
+        
         case a:
             raise NotImplementedError(f"Don't know how to handle: {a!r}")
 
@@ -140,7 +384,7 @@ for i, v in enumerate(input.values):
 
 state = State({}, Stack.empty().push(frame))
 
-for x in range(1000):
+for x in range(100000):
     state = step(state)
     if isinstance(state, str):
         print(state)
