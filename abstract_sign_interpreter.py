@@ -2,6 +2,7 @@ import jpamb
 from jpamb import jvm
 from dataclasses import dataclass
 import copy
+import novel_types as nd
 
 import sign
 
@@ -113,7 +114,7 @@ def step(state: State) -> State | str:
         
         case jvm.Load(type=t, index=i):
             v = frame.locals[i]
-            if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference):
+            if isinstance(t, (jvm.Int, jvm.Double, jvm.Reference)):
                 frame.stack.push(v)
             else:
                 raise NotImplementedError(f"Unhandled load type: {t}")
@@ -170,10 +171,16 @@ def step(state: State) -> State | str:
         case jvm.Binary(type=jvm.Int() | sign.SignSet, operant=oper):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
 
-            if not isinstance(v1, sign.SignSet):
-                v1: sign.SignSet = sign.SignSet.abstract( v1.value)
-            if not isinstance(v2, sign.SignSet):
-                v2: sign.SignSet = sign.SignSet.abstract( v2.value)
+            if isinstance(v1, sign.SignSet) or isinstance(v2, sign.SignSet) or isinstance(t, jvm.Int):
+                if not isinstance(v1, sign.SignSet):
+                    v1: sign.SignSet = sign.SignSet.abstract( v1.value)
+                if not isinstance(v2, sign.SignSet):
+                    v2: sign.SignSet = sign.SignSet.abstract( v2.value)
+            elif isinstance(t, jvm.Double):
+                if not isinstance(v1, nd.DoubleAbs):
+                    v1 = nd.DoubleAbs.abstract(v1.value)
+                if not isinstance(v2, nd.DoubleAbs):
+                    v2 = nd.DoubleAbs.abstract(v2.value)
 
             if oper == jvm.BinaryOpr.Div:
                 res = v1.div(v2)
@@ -186,11 +193,13 @@ def step(state: State) -> State | str:
             elif oper == jvm.BinaryOpr.Rem:
                 res = v1.rem(v2)
             else:
-                raise NotImplementedError(f"Unhandled integer binary op: {oper}")
+                raise NotImplementedError(f"Unhandled binary op: {oper}")
 
             frame.stack.push(res)
             frame.pc += 1
             return state
+            
+
         
         case jvm.Return(type=jvm.Int()):
             v1 = frame.stack.pop()
@@ -246,9 +255,10 @@ def step(state: State) -> State | str:
             frame.stack.push(cv)
             frame.pc += 1
             return state
+        
         case jvm.Store(type=t, index=i):
             v = frame.stack.pop()
-            if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference):
+            if isinstance(t, (jvm.Int, jvm.Double, jvm.Reference)):
                 frame.locals[i] = v
             elif isinstance(t, sign.SignSet):
                 frame.locals[i] = v
@@ -265,76 +275,97 @@ def step(state: State) -> State | str:
         case jvm.Ifz(condition=cond, target=target):
             v = frame.stack.pop()
 
-            if not isinstance(v, sign.SignSet):
-                v: sign.SignSet = sign.SignSet.abstract(v.value)
+            if isinstance(v, sign.SignSet) or isinstance(v, jvm.Value) and isinstance(v.type, jvm.Int):
+                if not isinstance(v, sign.SignSet):
+                    v: sign.SignSet = sign.SignSet.abstract(v.value)
+            elif isinstance(v, nd.DoubleAbs) or (isinstance(v, jvm.Value) and isinstance(v.type, jvm.Double)):
+                if not isinstance(v, nd.DoubleAbs):
+                    v = nd.DoubleAbs.abstract(v.value)
 
-            logger.debug(f"IFZ on {v.signs} with condition {cond}")
-            logger.debug(f"Signs: {v}")
+                take_branch = False
+                if cond == "eq":
+                    take_branch = (v.contains("0"))
+                elif cond == "ne":
+                    take_branch = (not v.contains("0"))
+                elif cond == "lt":
+                    take_branch = (v.contains("-"))
+                elif cond == "gt":
+                    take_branch = (v.contains("+"))
+                elif cond == "ge":
+                    take_branch = (v.contains("0") or v.contains("+"))
+                elif cond == "le":
+                    take_branch = (v.contains("0") or v.contains("-"))
+                else:
+                    raise NotImplementedError(f"Unhandled ifz condition: {cond}")
 
-            take_branch = False
-            if cond == "eq":
-                take_branch = (v.contains("0"))
-            elif cond == "ne":
-                take_branch = (not v.contains("0"))
-            elif cond == "lt":
-                take_branch = (v.contains("-"))
-            elif cond == "gt":
-                take_branch = (v.contains("+"))
-            elif cond == "ge":
-                take_branch = (v.contains("0") or v.contains("+"))
-            elif cond == "le":
-                take_branch = (v.contains("0") or v.contains("-"))
-            else:
-                raise NotImplementedError(f"Unhandled ifz condition: {cond}")
+                logger.debug(f"Taking branch: {take_branch}")
+                if take_branch:
+                    frame.pc = PC(frame.pc.method, target)
+                else:
+                    frame.pc += 1
+                return state
+            if isinstance(v, nd.AbsString):
+                if cond == "eq":
+                    take_branch = v.can_be_null
+                elif cond == "ne":
+                    take_branch = v.can_be_nonnull
+                else:
+                    take_branch = False
 
-            logger.debug(f"Taking branch: {take_branch}")
-            if take_branch:
-                frame.pc = PC(frame.pc.method, target)
-            else:
-                frame.pc += 1
+                if take_branch:
+                    frame.pc = PC(frame.pc.method, target)
+                else:
+                    frame.pc += 1
+                return state
+            frame.pc += 1
             return state
 
+
         case jvm.If(condition=cond, target=target):
-            # Pop right, then left (same order as your concrete interpreter)
             v2 = frame.stack.pop()
             v1 = frame.stack.pop()
 
-            # --- Normalise both to SignSet ---
+            if isinstance(v1, sign.SignSet) or isinstance(v2, sign.SignSet):
+                if not isinstance(v1, sign.SignSet):
+                    v1 = sign.SignSet.abstract(v1.value)
+                if not isinstance(v2, sign.SignSet):
+                    v2 = sign.SignSet.abstract(v2.value)
 
-            if not isinstance(v1, sign.SignSet):
-                v1 = sign.SignSet.abstract(v1.value)
-                
-            if not isinstance(v2, sign.SignSet):
-                v2 = sign.SignSet.abstract(v2.value)
+            elif isinstance(v1, nd.DoubleAbs) or isinstance(v2, nd.DoubleAbs):
+                if not isinstance(v1, nd.DoubleAbs):
+                    v1 = nd.DoubleAbs.abstract(v1.value)
+                if not isinstance(v2, nd.DoubleAbs):
+                    v2 = nd.DoubleAbs.abstract(v2.value)
 
-            def has(s: sign.SignSet, sym: str) -> bool:
-                return sym in s.signs
-
-
-            if cond == "eq":
-                take_branch = not v1.signs.isdisjoint(v2.signs)
-
-            elif cond == "ne":
-                take_branch = v1.signs != v2.signs
-
-            elif cond == "lt":
-                take_branch = has(v1, "-") and (has(v2, "0") or has(v2, "+"))
-
-            elif cond == "le":
-                take_branch = has(v1, "-") or has(v1, "0")
-
-            elif cond == "ge":
-                take_branch = has(v1, "+") or has(v1, "0")
-
-            elif cond == "gt":
-                if v2.signs == {"-"}:
-                    take_branch = True
-                else:
-                    take_branch = has(v1, "+") and not has(v2, "+")
-            else:
-                raise NotImplementedError(f"Unhandled If condition: {cond}")
+                def has(s: sign.SignSet, sym: str) -> bool:
+                    return sym in s.signs
             
-            print(take_branch)
+                if cond == "eq":
+                    take_branch = not v1.signs.isdisjoint(v2.signs)
+                elif cond == "ne":
+                    take_branch = v1.signs != v2.signs
+                elif cond == "lt":
+                    take_branch = has(v1, "-") and (has(v2, "0") or has(v2, "+"))
+                elif cond == "le":
+                    take_branch = has(v1, "-") or has(v1, "0")
+                elif cond == "ge":
+                    take_branch = has(v1, "+") or has(v1, "0")
+                elif cond == "gt":
+                    if v2.signs == {"-"}:
+                        take_branch = True
+                    else:
+                        take_branch = has(v1, "+") and not has(v2, "+")
+                else:
+                    raise NotImplementedError(f"Unhandled If condition: {cond}")
+            
+            elif isinstance(v1, nd.AbsString) or isinstance(v2, nd.AbsString):
+                if cond == "eq":
+                    take_branch = True  
+                elif cond == "ne":
+                    take_branch = True  
+                else:
+                        take_branch = False
+            
             if take_branch:
                 frame.pc = PC(frame.pc.method, target)
             else:
