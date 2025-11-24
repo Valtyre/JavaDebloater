@@ -14,12 +14,17 @@ public class Calls {
     assert false;
   }
 
+  public static void doNothing() {
+    
+  }
+
   public static void assertIf(boolean test) {
     if (test) {
       assertTrue();
     } else {
       assertFalse();
     }
+    doNothing();
   }
 
   @Case("() -> ok")

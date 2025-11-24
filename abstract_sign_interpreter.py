@@ -13,7 +13,7 @@ logger.add(sys.stderr, format="[{level}] {message}")
 
 methodid, input = jpamb.getcase()
 
-
+### Work here 
 
 @dataclass
 class PC:
@@ -158,35 +158,40 @@ def step(state: State) -> State | str:
 
         case jvm.Incr(index=i, amount=amt):
             v = frame.locals[i]
-            s: sign.SignSet = sign.SignSet(v.value)
-            frame.locals[i] = s.abstract({x + amt for x in s})
+            if not isinstance(v, sign.SignSet):
+                v: sign.SignSet = sign.SignSet.abstract( v.value)
+            if not isinstance(amt, sign.SignSet):
+                amt: sign.SignSet = sign.SignSet.abstract( amt)
+            
+            v = v.add(sign.SignSet.abstract( amt))
             frame.pc += 1
             return state
         
-        case jvm.Binary(type=jvm.Int(), operant=oper):
+        case jvm.Binary(type=jvm.Int() | sign.SignSet, operant=oper):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
-            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
-            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
+
+            if not isinstance(v1, sign.SignSet):
+                v1: sign.SignSet = sign.SignSet.abstract( v1.value)
+            if not isinstance(v2, sign.SignSet):
+                v2: sign.SignSet = sign.SignSet.abstract( v2.value)
+
             if oper == jvm.BinaryOpr.Div:
-                if v2.value == 0:
-                    return "divide by zero"
-                res = v1.value // v2.value
+                res = v1.div(v2)
             elif oper == jvm.BinaryOpr.Add:
-                res = v1.value + v2.value
+                res = v1.add(v2)
             elif oper == jvm.BinaryOpr.Sub:
-                res = v1.value - v2.value
+                res = v1.sub(v2)
             elif oper == jvm.BinaryOpr.Mul:
-                res = v1.value * v2.value
+                res = v1.mult(v2)
             elif oper == jvm.BinaryOpr.Rem:
-                if v2.value == 0:
-                    return "divide by zero"
-                res = v1.value % v2.value
+                res = v1.rem(v2)
             else:
                 raise NotImplementedError(f"Unhandled integer binary op: {oper}")
 
-            frame.stack.push(jvm.Value.int(res))
+            frame.stack.push(res)
             frame.pc += 1
             return state
+        
         case jvm.Return(type=jvm.Int()):
             v1 = frame.stack.pop()
             state.frames.pop()
@@ -245,6 +250,8 @@ def step(state: State) -> State | str:
             v = frame.stack.pop()
             if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference):
                 frame.locals[i] = v
+            elif isinstance(t, sign.SignSet):
+                frame.locals[i] = v
             else:
                 raise NotImplementedError(f"Unhandled store type: {t}")
             frame.pc += 1
@@ -257,24 +264,30 @@ def step(state: State) -> State | str:
             return state
         case jvm.Ifz(condition=cond, target=target):
             v = frame.stack.pop()
-            assert v.type in (jvm.Int(), jvm.Boolean()), f"expected int/bool, got {v}"
+
+            if not isinstance(v, sign.SignSet):
+                v: sign.SignSet = sign.SignSet.abstract(v.value)
+
+            logger.debug(f"IFZ on {v.signs} with condition {cond}")
+            logger.debug(f"Signs: {v}")
 
             take_branch = False
             if cond == "eq":
-                take_branch = (v.value == 0)
+                take_branch = (v.contains("0"))
             elif cond == "ne":
-                take_branch = (v.value != 0)
+                take_branch = (not v.contains("0"))
             elif cond == "lt":
-                take_branch = (v.value < 0)
-            elif cond == "ge":
-                take_branch = (v.value >= 0)
+                take_branch = (v.contains("-"))
             elif cond == "gt":
-                take_branch = (v.value > 0)
+                take_branch = (v.contains("+"))
+            elif cond == "ge":
+                take_branch = (v.contains("0") or v.contains("+"))
             elif cond == "le":
-                take_branch = (v.value <= 0)
+                take_branch = (v.contains("0") or v.contains("-"))
             else:
                 raise NotImplementedError(f"Unhandled ifz condition: {cond}")
 
+            logger.debug(f"Taking branch: {take_branch}")
             if take_branch:
                 frame.pc = PC(frame.pc.method, target)
             else:
@@ -282,26 +295,46 @@ def step(state: State) -> State | str:
             return state
 
         case jvm.If(condition=cond, target=target):
+            # Pop right, then left (same order as your concrete interpreter)
             v2 = frame.stack.pop()
             v1 = frame.stack.pop()
-            assert v1.type is jvm.Int() and v2.type is jvm.Int()
 
-            take_branch = False
+            # --- Normalise both to SignSet ---
+
+            if not isinstance(v1, sign.SignSet):
+                v1 = sign.SignSet.abstract(v1.value)
+                
+            if not isinstance(v2, sign.SignSet):
+                v2 = sign.SignSet.abstract(v2.value)
+
+            def has(s: sign.SignSet, sym: str) -> bool:
+                return sym in s.signs
+
+
             if cond == "eq":
-                take_branch = (v1.value == v2.value)
+                take_branch = not v1.signs.isdisjoint(v2.signs)
+
             elif cond == "ne":
-                take_branch = (v1.value != v2.value)
+                take_branch = v1.signs != v2.signs
+
             elif cond == "lt":
-                take_branch = (v1.value < v2.value)
-            elif cond == "ge":
-                take_branch = (v1.value >= v2.value)
-            elif cond == "gt":
-                take_branch = (v1.value > v2.value)
+                take_branch = has(v1, "-") and (has(v2, "0") or has(v2, "+"))
+
             elif cond == "le":
-                take_branch = (v1.value <= v2.value)
+                take_branch = has(v1, "-") or has(v1, "0")
+
+            elif cond == "ge":
+                take_branch = has(v1, "+") or has(v1, "0")
+
+            elif cond == "gt":
+                if v2.signs == {"-"}:
+                    take_branch = True
+                else:
+                    take_branch = has(v1, "+") and not has(v2, "+")
             else:
                 raise NotImplementedError(f"Unhandled If condition: {cond}")
-
+            
+            print(take_branch)
             if take_branch:
                 frame.pc = PC(frame.pc.method, target)
             else:
@@ -345,6 +378,7 @@ state = State({}, Stack.empty().push(frame))
 
 for x in range(1000):
     state = step(state)
+    print(state)
     if isinstance(state, str):
         print(state)
         break
