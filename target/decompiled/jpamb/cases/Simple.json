@@ -93,6 +93,53 @@
           "values": {
             "value": {
               "type": "string",
+              "value": "() -> ok"
+            }
+          }
+        }
+      ],
+      "code": {
+        "annotations": [],
+        "bytecode": [
+          {
+            "offset": 0,
+            "opr": "return",
+            "type": null
+          }
+        ],
+        "exceptions": [],
+        "lines": [
+          {
+            "line": 10,
+            "offset": 0
+          }
+        ],
+        "max_locals": 0,
+        "max_stack": 0,
+        "stack_map": null
+      },
+      "default": null,
+      "exceptions": [],
+      "name": "assertTrue",
+      "params": [],
+      "returns": {
+        "annotations": [],
+        "type": null
+      },
+      "typeparams": []
+    },
+    {
+      "access": [
+        "public",
+        "static"
+      ],
+      "annotations": [
+        {
+          "is_runtime_visible": true,
+          "type": "jpamb/utils/Case",
+          "values": {
+            "value": {
+              "type": "string",
               "value": "() -> assertion error"
             }
           }
@@ -155,11 +202,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 9,
+            "line": 14,
             "offset": 0
           },
           {
-            "line": 10,
+            "line": 15,
             "offset": 6
           }
         ],
@@ -293,11 +340,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 15,
+            "line": 20,
             "offset": 0
           },
           {
-            "line": 16,
+            "line": 21,
             "offset": 8
           }
         ],
@@ -440,11 +487,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 21,
+            "line": 26,
             "offset": 0
           },
           {
-            "line": 22,
+            "line": 27,
             "offset": 8
           }
         ],
@@ -587,11 +634,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 27,
+            "line": 32,
             "offset": 0
           },
           {
-            "line": 28,
+            "line": 33,
             "offset": 8
           }
         ],
@@ -674,7 +721,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 32,
+            "line": 37,
             "offset": 0
           }
         ],
@@ -768,7 +815,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 38,
+            "line": 43,
             "offset": 0
           }
         ],
@@ -869,7 +916,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 44,
+            "line": 49,
             "offset": 0
           }
         ],
@@ -1039,11 +1086,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 50,
+            "line": 55,
             "offset": 0
           },
           {
-            "line": 51,
+            "line": 56,
             "offset": 8
           }
         ],
@@ -1114,7 +1161,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 57,
+            "line": 62,
             "offset": 0
           }
         ],
@@ -1265,11 +1312,11 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 66,
+            "line": 71,
             "offset": 0
           },
           {
-            "line": 67,
+            "line": 72,
             "offset": 8
           }
         ],
@@ -1467,19 +1514,19 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 73,
+            "line": 78,
             "offset": 0
           },
           {
-            "line": 74,
+            "line": 79,
             "offset": 2
           },
           {
-            "line": 76,
+            "line": 81,
             "offset": 6
           },
           {
-            "line": 77,
+            "line": 82,
             "offset": 15
           }
         ],
@@ -1659,19 +1706,19 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 83,
+            "line": 88,
             "offset": 0
           },
           {
-            "line": 84,
+            "line": 89,
             "offset": 2
           },
           {
-            "line": 86,
+            "line": 91,
             "offset": 3
           },
           {
-            "line": 87,
+            "line": 92,
             "offset": 13
           }
         ],
@@ -1744,7 +1791,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 91,
+            "line": 96,
             "offset": 0
           }
         ],
@@ -1811,7 +1858,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 96,
+            "line": 101,
             "offset": 0
           }
         ],
@@ -1895,7 +1942,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 101,
+            "line": 106,
             "offset": 0
           }
         ],
@@ -1961,7 +2008,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 106,
+            "line": 111,
             "offset": 0
           }
         ],
@@ -2067,7 +2114,7 @@
         "exceptions": [],
         "lines": [
           {
-            "line": 112,
+            "line": 117,
             "offset": 0
           }
         ],

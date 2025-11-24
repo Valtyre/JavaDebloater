@@ -4,6 +4,11 @@ import jpamb.utils.Case;
 
 public class Simple {
 
+  @Case("() -> ok")
+  public static void assertTrue() {
+    assert true;
+  }
+
   @Case("() -> assertion error")
   public static void assertFalse() {
     assert false;

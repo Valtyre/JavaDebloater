@@ -3,6 +3,8 @@ from jpamb import jvm
 from dataclasses import dataclass
 import copy
 
+import sign
+
 import sys
 from loguru import logger
 
@@ -11,7 +13,7 @@ logger.add(sys.stderr, format="[{level}] {message}")
 
 methodid, input = jpamb.getcase()
 
-
+### Work here 
 
 @dataclass
 class PC:
@@ -118,32 +120,17 @@ def step(state: State) -> State | str:
             frame.pc += 1
             return state
 
-        case jvm.ArrayLoad(type=t):
+        case jvm.ArrayLoad():
             index = frame.stack.pop().value
             arr = frame.stack.pop()
-
-
-            if isinstance(arr, jvm.Value) and arr.value is None:
-                return "null pointer"
-            
-            if index < 0 or index >= len(arr.value if isinstance(arr, jvm.Value) else arr):
+            if not isinstance(arr, list):
+                raise RuntimeError(f"Expected array, got {arr}")
+            if isinstance(index, sign.SignSet):
+                frame.pc += 1
+                return state
+            elif index < 0 or index >= len(arr):
                 return "out of bounds"
-            
-            if isinstance(t, jvm.Char):
-               frame.stack.push(
-                   jvm.Value.int(
-                       ord((arr.value if isinstance(arr, jvm.Value) else arr)[index])
-                   )
-               )
-
-            elif isinstance(t, jvm.Int):
-                frame.stack.push(
-                    jvm.Value.int(
-                        (arr.value if isinstance(arr, jvm.Value) else arr)[index]
-                    )
-                )
-
-            
+            frame.stack.push(jvm.Value.int(arr[index]))
             frame.pc += 1
             return state
 
@@ -151,74 +138,61 @@ def step(state: State) -> State | str:
             val = frame.stack.pop()
             index = frame.stack.pop().value
             arr = frame.stack.pop()
-
-            if isinstance(arr, jvm.Value) and arr.value is None:
-                return "null pointer"
-            if index < 0 or index >= len(arr.value if isinstance(arr, jvm.Value) else arr):
-                return "out of bounds"
-            
             if not isinstance(arr, list):
                 raise RuntimeError(f"Expected array, got {arr}")
-
+            if index < 0 or index >= len(arr):
+                return "out of bounds"
             arr[index] = val.value
             frame.pc += 1
             return state
         
         case jvm.ArrayLength():
             arr = frame.stack.pop()
-            
-            if isinstance(arr, jvm.Value) and arr.value is None:
-                return "null pointer"
-            frame.stack.push(jvm.Value.int(len(arr.value if isinstance(arr, jvm.Value) else arr)))
+            if not isinstance(arr, list):
+                raise RuntimeError(f"Expected array, got {arr}")
+            frame.stack.push(jvm.Value.int(len(arr)))
             frame.pc += 1
             return state
         
+        ### Integer operations
+
         case jvm.Incr(index=i, amount=amt):
             v = frame.locals[i]
-            assert v.type is jvm.Int(), f"expected int in local {i}, got {v}"
-            frame.locals[i] = jvm.Value.int(v.value + amt)
+            if not isinstance(v, sign.SignSet):
+                v: sign.SignSet = sign.SignSet.abstract( v.value)
+            if not isinstance(amt, sign.SignSet):
+                amt: sign.SignSet = sign.SignSet.abstract( amt)
+            
+            v = v.add(sign.SignSet.abstract( amt))
             frame.pc += 1
             return state
-
         
-        
-        case jvm.Binary(type=jvm.Int(), operant=oper):
-
-
-
+        case jvm.Binary(type=jvm.Int() | sign.SignSet, operant=oper):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
-            assert v1.type is jvm.Int(), f"expected int, but got {v1}"
-            assert v2.type is jvm.Int(), f"expected int, but got {v2}"
+
+            if not isinstance(v1, sign.SignSet):
+                v1: sign.SignSet = sign.SignSet.abstract( v1.value)
+            if not isinstance(v2, sign.SignSet):
+                v2: sign.SignSet = sign.SignSet.abstract( v2.value)
+
             if oper == jvm.BinaryOpr.Div:
-                if v2.value == 0:
-                    return "divide by zero"
-                res = v1.value // v2.value
+                res = v1.div(v2)
             elif oper == jvm.BinaryOpr.Add:
-                res = v1.value + v2.value
+                res = v1.add(v2)
             elif oper == jvm.BinaryOpr.Sub:
-                res = v1.value - v2.value
+                res = v1.sub(v2)
             elif oper == jvm.BinaryOpr.Mul:
-                res = v1.value * v2.value
+                res = v1.mult(v2)
             elif oper == jvm.BinaryOpr.Rem:
-                if v2.value == 0:
-                    return "divide by zero"
-                res = v1.value % v2.value
+                res = v1.rem(v2)
             else:
                 raise NotImplementedError(f"Unhandled integer binary op: {oper}")
 
-            frame.stack.push(jvm.Value.int(res))
+            frame.stack.push(res)
             frame.pc += 1
             return state
+        
         case jvm.Return(type=jvm.Int()):
-            v1 = frame.stack.pop()
-            state.frames.pop()
-            if state.frames:
-                state.frames.peek().stack.push(v1)
-                return state
-            else:
-                return "ok"
-            
-        case jvm.Return(type=jvm.Reference()):
             v1 = frame.stack.pop()
             state.frames.pop()
             if state.frames:
@@ -268,17 +242,16 @@ def step(state: State) -> State | str:
             if not frame.stack:
                 raise RuntimeError("stack underflow on dup")
             v = frame.stack.peek()
-            frame.stack.push(v)   # push the same reference/value
+            cv = copy.copy(v)
+            frame.stack.push(cv)
             frame.pc += 1
             return state
-
-
         case jvm.Store(type=t, index=i):
             v = frame.stack.pop()
             if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference):
                 frame.locals[i] = v
-            
-            
+            elif isinstance(t, sign.SignSet):
+                frame.locals[i] = v
             else:
                 raise NotImplementedError(f"Unhandled store type: {t}")
             frame.pc += 1
@@ -291,24 +264,30 @@ def step(state: State) -> State | str:
             return state
         case jvm.Ifz(condition=cond, target=target):
             v = frame.stack.pop()
-            assert v.type in (jvm.Int(), jvm.Boolean()), f"expected int/bool, got {v}"
+
+            if not isinstance(v, sign.SignSet):
+                v: sign.SignSet = sign.SignSet.abstract(v.value)
+
+            logger.debug(f"IFZ on {v.signs} with condition {cond}")
+            logger.debug(f"Signs: {v}")
 
             take_branch = False
             if cond == "eq":
-                take_branch = (v.value == 0)
+                take_branch = (v.contains("0"))
             elif cond == "ne":
-                take_branch = (v.value != 0)
+                take_branch = (not v.contains("0"))
             elif cond == "lt":
-                take_branch = (v.value < 0)
-            elif cond == "ge":
-                take_branch = (v.value >= 0)
+                take_branch = (v.contains("-"))
             elif cond == "gt":
-                take_branch = (v.value > 0)
+                take_branch = (v.contains("+"))
+            elif cond == "ge":
+                take_branch = (v.contains("0") or v.contains("+"))
             elif cond == "le":
-                take_branch = (v.value <= 0)
+                take_branch = (v.contains("0") or v.contains("-"))
             else:
                 raise NotImplementedError(f"Unhandled ifz condition: {cond}")
 
+            logger.debug(f"Taking branch: {take_branch}")
             if take_branch:
                 frame.pc = PC(frame.pc.method, target)
             else:
@@ -316,33 +295,46 @@ def step(state: State) -> State | str:
             return state
 
         case jvm.If(condition=cond, target=target):
+            # Pop right, then left (same order as your concrete interpreter)
             v2 = frame.stack.pop()
             v1 = frame.stack.pop()
 
-            if v1.type is jvm.Char():
-                v1 = jvm.Value.int(v1.value)
-            if v2.type is jvm.Char():
-                v2 = jvm.Value.int(v2.value)
+            # --- Normalise both to SignSet ---
 
-            assert v1.type is jvm.Int() and v2.type is jvm.Int()
+            if not isinstance(v1, sign.SignSet):
+                v1 = sign.SignSet.abstract(v1.value)
+                
+            if not isinstance(v2, sign.SignSet):
+                v2 = sign.SignSet.abstract(v2.value)
+
+            def has(s: sign.SignSet, sym: str) -> bool:
+                return sym in s.signs
 
 
-            take_branch = False
             if cond == "eq":
-                take_branch = (v1.value == v2.value)
+                take_branch = not v1.signs.isdisjoint(v2.signs)
+
             elif cond == "ne":
-                take_branch = (v1.value != v2.value)
+                take_branch = v1.signs != v2.signs
+
             elif cond == "lt":
-                take_branch = (v1.value < v2.value)
-            elif cond == "ge":
-                take_branch = (v1.value >= v2.value)
-            elif cond == "gt":
-                take_branch = (v1.value > v2.value)
+                take_branch = has(v1, "-") and (has(v2, "0") or has(v2, "+"))
+
             elif cond == "le":
-                take_branch = (v1.value <= v2.value)
+                take_branch = has(v1, "-") or has(v1, "0")
+
+            elif cond == "ge":
+                take_branch = has(v1, "+") or has(v1, "0")
+
+            elif cond == "gt":
+                if v2.signs == {"-"}:
+                    take_branch = True
+                else:
+                    take_branch = has(v1, "+") and not has(v2, "+")
             else:
                 raise NotImplementedError(f"Unhandled If condition: {cond}")
-
+            
+            print(take_branch)
             if take_branch:
                 frame.pc = PC(frame.pc.method, target)
             else:
@@ -384,10 +376,13 @@ for i, v in enumerate(input.values):
 
 state = State({}, Stack.empty().push(frame))
 
-for x in range(100000):
+for x in range(1000):
     state = step(state)
+    print(state)
     if isinstance(state, str):
         print(state)
         break
+    else: 
+        print("STATE: ",state)
 else:
     print("*")

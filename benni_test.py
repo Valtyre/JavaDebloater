@@ -343,5 +343,7 @@ for x in range(1000):
     if isinstance(state, str):
         print(state)
         break
+    else: 
+        print("STATE: ",state)
 else:
     print("*")
