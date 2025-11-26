@@ -2,6 +2,7 @@ import jpamb
 from jpamb import jvm
 from dataclasses import dataclass
 import copy
+import math
 
 import sign
 
@@ -30,6 +31,14 @@ class PC:
     def __str__(self):
         return f"{self.method}:{self.offset}"
 
+def bind_args_to_locals(frame, args):
+    local_index = 0
+    for arg in args:
+        frame.locals[local_index] = arg
+        if isinstance(arg.type, (jvm.Long, jvm.Double)):
+            local_index += 2
+        else:
+            local_index += 1
 
 @dataclass
 class Bytecode:
@@ -104,7 +113,6 @@ def step(state: State) -> State | str:
     assert isinstance(state, State), f"expected frame but got {state}"
     frame = state.frames.peek()
     opr = bc[frame.pc]
-    logger.debug(f"STEP {opr}\n{state}")
     match opr:
         case jvm.Push(value=v):
             frame.stack.push(v)
@@ -113,7 +121,7 @@ def step(state: State) -> State | str:
         
         case jvm.Load(type=t, index=i):
             v = frame.locals[i]
-            if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference):
+            if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference) or isinstance(t, jvm.Double):
                 frame.stack.push(v)
             else:
                 raise NotImplementedError(f"Unhandled load type: {t}")
@@ -159,21 +167,21 @@ def step(state: State) -> State | str:
         case jvm.Incr(index=i, amount=amt):
             v = frame.locals[i]
             if not isinstance(v, sign.SignSet):
-                v: sign.SignSet = sign.SignSet.abstract( v.value)
+                v: sign.SignSet = sign.SignSet.abstract_value( v.value)
             if not isinstance(amt, sign.SignSet):
-                amt: sign.SignSet = sign.SignSet.abstract( amt)
+                amt: sign.SignSet = sign.SignSet.abstract_value( amt)
             
-            v = v.add(sign.SignSet.abstract( amt))
+            v = v.add(sign.SignSet.abstract_value( amt))
             frame.pc += 1
             return state
         
-        case jvm.Binary(type=jvm.Int() | sign.SignSet, operant=oper):
+        case jvm.Binary(type=jvm.Int() | sign.SignSet | jvm.Double(), operant=oper):
             v2, v1 = frame.stack.pop(), frame.stack.pop()
 
             if not isinstance(v1, sign.SignSet):
-                v1: sign.SignSet = sign.SignSet.abstract( v1.value)
+                v1: sign.SignSet = sign.SignSet.abstract_value( v1.value)
             if not isinstance(v2, sign.SignSet):
-                v2: sign.SignSet = sign.SignSet.abstract( v2.value)
+                v2: sign.SignSet = sign.SignSet.abstract_value( v2.value)
 
             if oper == jvm.BinaryOpr.Div:
                 res = v1.div(v2)
@@ -232,6 +240,112 @@ def step(state: State) -> State | str:
 
             return state
         
+        case jvm.InvokeDynamic(offset=offset, stack_size=stack_size):
+            args = []
+            for _ in range(stack_size):
+                args.append(frame.stack.pop())
+
+            args.reverse()
+        
+            frame.stack.push(jvm.Value(jvm.String(), "<dyn-string>"))
+
+            frame.pc += 1
+            return state
+        
+        case jvm.InvokeVirtual(method=m):
+            cname = m.classname.dotted()
+            mname = m.methodid.name
+
+            if (cname in ("java/lang/String", "java.lang.String")
+                    and mname == "length"):
+                frame.stack.pop()
+                frame.stack.push(jvm.Value.int(1)) 
+
+                frame.pc += 1
+                return state
+
+            arg_count = len(m.methodid.params._elements) + 1
+
+            args: list[jvm.Value] = []
+            for _ in range(arg_count):
+                args.append(frame.stack.pop())
+            args.reverse()
+
+            newframe = Frame.from_method(m)
+            for i, arg in enumerate(args):
+                newframe.locals[i] = arg
+
+            state.frames.push(newframe)
+            frame.pc += 1
+            return state
+        
+        
+
+        case jvm.CompareFloating(type=t, mode=mode):
+            v2 = frame.stack.pop()
+            v1 = frame.stack.pop()
+
+            def as_number(v):
+                if isinstance(v, jvm.Value):
+                    if isinstance(
+                        v.type,
+                        (
+                            jvm.Double,
+                            jvm.Float,
+                            jvm.Int,
+                            jvm.Long,
+                            jvm.Short,
+                            jvm.Byte,
+                        ),
+                    ):
+                        return v.value
+                    return None
+
+                if v.__class__.__name__ == "SignSet":
+                    return 0.0
+
+                if isinstance(v, (int, float)):
+                    return v
+                return None
+
+            x = as_number(v1)
+            y = as_number(v2)
+
+            
+            if x is None or y is None:
+                frame.stack.push(jvm.Value.int(0))
+                frame.pc += 1
+                return state
+
+            import math
+
+            m = (mode or "").lower()
+            is_less_variant = m in ("l", "lt", "less", "cmpl")
+            is_great_variant = m in ("g", "gt", "greater", "cmpg")
+
+            nan = (
+                isinstance(x, float) and math.isnan(x)
+            ) or (
+                isinstance(y, float) and math.isnan(y)
+            )
+
+            if nan:
+                if is_less_variant:
+                    res = -1
+                else:
+                    res = 1
+            else:
+                if x < y:
+                    res = -1
+                elif x > y:
+                    res = 1
+                else:
+                    res = 0
+
+            frame.stack.push(jvm.Value.int(res))
+            frame.pc += 1
+            return state
+        
         case jvm.Throw():
             v1 = frame.stack.pop()
             if str(v1) == "java/lang/AssertionError":
@@ -248,7 +362,7 @@ def step(state: State) -> State | str:
             return state
         case jvm.Store(type=t, index=i):
             v = frame.stack.pop()
-            if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference):
+            if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference) or isinstance(t, jvm.Double):
                 frame.locals[i] = v
             elif isinstance(t, sign.SignSet):
                 frame.locals[i] = v
@@ -266,10 +380,7 @@ def step(state: State) -> State | str:
             v = frame.stack.pop()
 
             if not isinstance(v, sign.SignSet):
-                v: sign.SignSet = sign.SignSet.abstract(v.value)
-
-            logger.debug(f"IFZ on {v.signs} with condition {cond}")
-            logger.debug(f"Signs: {v}")
+                v: sign.SignSet = sign.SignSet.abstract_value(v.value)
 
             take_branch = False
             if cond == "eq":
@@ -287,7 +398,6 @@ def step(state: State) -> State | str:
             else:
                 raise NotImplementedError(f"Unhandled ifz condition: {cond}")
 
-            logger.debug(f"Taking branch: {take_branch}")
             if take_branch:
                 frame.pc = PC(frame.pc.method, target)
             else:
@@ -302,10 +412,10 @@ def step(state: State) -> State | str:
             # --- Normalise both to SignSet ---
 
             if not isinstance(v1, sign.SignSet):
-                v1 = sign.SignSet.abstract(v1.value)
+                v1 = sign.SignSet.abstract_value(v1.value)
                 
             if not isinstance(v2, sign.SignSet):
-                v2 = sign.SignSet.abstract(v2.value)
+                v2 = sign.SignSet.abstract_value(v2.value)
 
             def has(s: sign.SignSet, sym: str) -> bool:
                 return sym in s.signs
@@ -371,8 +481,7 @@ def step(state: State) -> State | str:
 
 
 frame = Frame.from_method(methodid)
-for i, v in enumerate(input.values):
-    frame.locals[i] = v
+bind_args_to_locals(frame, input.values)
 
 state = State({}, Stack.empty().push(frame))
 

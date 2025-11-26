@@ -3,6 +3,7 @@ from typing import TypeAlias, Literal
 
 from dataclasses import dataclass
 from typing import TypeAlias, Literal
+from jpamb import jvm
 
 # Define Sign as a type alias for the allowed literals
 Sign: TypeAlias = Literal["+", "-", "0"]
@@ -11,19 +12,78 @@ Sign: TypeAlias = Literal["+", "-", "0"]
 class SignSet:
     signs: set[Sign]
 
+    @classmethod
+    def bottom(cls) -> "SignSet":
+        return cls(set())
+
+    @classmethod
+    def top(cls) -> "SignSet":
+        return cls({"+", "-", "0"})
+
+    @classmethod
+    def pos(cls) -> "SignSet":
+        return cls({"+",})
+
+    @classmethod
+    def neg(cls) -> "SignSet":
+        return cls({"-",})
+
+    @classmethod
+    def zero(cls) -> "SignSet":
+        return cls({"0",})
+
+    def is_bottom(self) -> bool:
+        return len(self.signs) == 0
+
+    def is_top(self) -> bool:
+        return self.signs == {"+", "-", "0"}
+
+    def join(self, other: "SignSet") -> "SignSet":
+        return SignSet(self.signs | other.signs)
+
+    def meet(self, other: "SignSet") -> "SignSet":
+        return SignSet(self.signs & other.signs)
+
     def contains(self, sign: str) -> bool:
-        """Check if the SignSet contains a specific sign."""
+        return sign in self.signs
+
+    def contains(self, sign: str) -> bool:
         return sign in self.signs
 
     @classmethod
-    def abstract(cls, num: int) -> "SignSet":
-        """Create a SignSet based on the value of the number."""
-        if num == 0:
-            return cls({"0"})
-        elif num > 0:
-            return cls({"+"})
-        else:  # num < 0
-            return cls({"-"})
+    def from_int(cls, n: int) -> "SignSet":
+        if n < 0:
+            return cls(frozenset({'-'}))
+        if n == 0:
+            return cls(frozenset({'0'}))
+        return cls(frozenset({'+'}))
+
+    @classmethod
+    def from_float(cls, x: float) -> "SignSet":
+        if x < 0.0:
+            return cls(frozenset({'-'}))
+        if x == 0.0:
+            return cls(frozenset({'0'}))
+        return cls(frozenset({'+'}))
+
+    @classmethod
+    def abstract_value(cls, v) -> "SignSet":
+        if isinstance(v, SignSet):
+            return v
+
+        if isinstance(v, bool):
+            if not v:
+                return cls(frozenset({'0'}))
+            else:
+                return cls(frozenset({'+', '-'}))
+
+        if isinstance(v, int):
+            return cls.from_int(v)
+
+        if isinstance(v, float):
+            return cls.from_float(v)
+
+        return cls.bottom()
     
     def add(self, other: "SignSet") -> "SignSet":
         result_signs = set()

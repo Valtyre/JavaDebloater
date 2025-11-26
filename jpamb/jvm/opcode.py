@@ -9,7 +9,6 @@ each instruction.
 
 from dataclasses import dataclass, fields
 from abc import ABC, abstractmethod
-from typing import Self
 
 import enum
 import sys
@@ -28,9 +27,9 @@ class Opcode(ABC):
     def __post_init__(self):
         for f in fields(self):
             v = getattr(self, f.name)
-            assert isinstance(
-                v, f.type
-            ), f"Expected {f.name!r} to be type {f.type}, but was {v!r}, in {self!r}"
+            assert isinstance(v, f.type), (
+                f"Expected {f.name!r} to be type {f.type}, but was {v!r}, in {self!r}"
+            )
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":
@@ -71,6 +70,8 @@ class Opcode(ABC):
                 opr = Goto
             case "return":
                 opr = Return
+            case "negate":
+                opr = Negate
             case "invoke":
                 match json["access"]:
                     case "virtual":
@@ -81,20 +82,29 @@ class Opcode(ABC):
                         opr = InvokeInterface
                     case "special":
                         opr = InvokeSpecial
+                    case "dynamic":
+                        opr = InvokeDynamic
                     case access:
                         raise NotImplementedError(
                             f"Unhandled invoke access {access!r} (implement yourself)"
                         )
+            case "comparefloating":
+                opr = CompareFloating
             case opr:
                 raise NotImplementedError(
                     f"Unhandled opcode {opr!r} (implement yourself)"
                 )
         try:
-            return opr.from_json(json)
+            opcode = opr.from_json(json)
         except NotImplementedError as e:
             raise NotImplementedError(f"Unhandled opcode {json!r}") from e
+        
+        if opcode is None:
+            raise TypeError(f"Opcode.from_json returned None for json={json!r}")
+        return opcode
 
     def help(self):
+        logger.warning(f"It seems {self!r} is not implemented!")
         logger.warning("Instructions can be found at: " + self.url())
         if self.semantics():
             logger.debug(f"Semantics:\n {self.semantics()}")
@@ -105,6 +115,9 @@ class Opcode(ABC):
 
     @abstractmethod
     def mnemonic(self) -> str: ...
+
+    @abstractmethod
+    def semantics(self) -> str | None: ...
 
     def url(self) -> str:
         return (
@@ -168,6 +181,8 @@ class Push(Opcode):
                     return "iconst_i"
                 else:
                     return "ldc"
+            case jvm.Double():
+                return "ldc2_w"
             case jvm.Reference():
                 return "aconst_null"
 
@@ -175,6 +190,34 @@ class Push(Opcode):
 
     def __str__(self):
         return f"push:{self.value.type} {self.value.value}"
+
+
+@dataclass(frozen=True, order=True)
+class Negate(Opcode):
+    """The new array opcode"""
+
+    type: jvm.Type
+
+    @classmethod
+    def from_json(cls, json: dict) -> Opcode:
+        return cls(
+            offset=json["offset"],
+            type=jvm.Type.from_json(json["type"]),
+        )
+
+    def real(self) -> str:
+        return f"negate {self.type}"
+
+    def semantics(self) -> str | None:
+        return None
+
+    def mnemonic(self) -> str:
+        match self.type:
+            case jvm.Int():
+                return "ineg"
+
+    def __str__(self):
+        return self.real()
 
 
 @dataclass(frozen=True, order=True)
@@ -199,11 +242,6 @@ class NewArray(Opcode):
             return f"multianewarray {self.type} {self.dim}"
 
     def semantics(self) -> str | None:
-        if self.dim == 1:
-            return "newarray"
-        else:
-            return "multianewarray"
-
         return None
 
     def mnemonic(self) -> str:
@@ -492,7 +530,34 @@ class InvokeInterface(Opcode):
     def __str__(self):
         return f"invoke interface {self.method} (stack_size={self.stack_size})"
 
+@dataclass(frozen=True, order=True)
+class InvokeDynamic(Opcode):
+    """
+    Minimal stub for invokedynamic.
+    We ignore all bootstrap/method metadata and only store offset + stack size.
+    """
 
+    stack_size: int = 0   # default if not provided
+
+    @classmethod
+    def from_json(cls, json: dict) -> "Opcode":
+        assert json["opr"] == "invoke" and json["access"] == "dynamic"
+        offset = json["offset"]
+        stack_size = json.get("stack_size", 0)
+        return cls(offset=offset, stack_size=stack_size)
+
+    def real(self) -> str:
+        return "invokedynamic"
+
+    def mnemonic(self) -> str:
+        return "invokedynamic"
+
+    def semantics(self) -> str | None:
+        return None
+
+    def __str__(self):
+        return f"invoke dynamic (stack_size={self.stack_size})"
+    
 @dataclass(frozen=True, order=True)
 class InvokeSpecial(Opcode):
     """The invoke special opcode for calling constructors, private methods,
@@ -609,6 +674,91 @@ class BinaryOpr(enum.Enum):
 
     def __str__(self):
         return self.name.lower()
+    
+@dataclass(frozen=True, order=True)
+class CompareFloating(Opcode):
+    """
+    Floating-point comparison (double/float).
+
+    JVM semantics (for dcmpl/dcmpg, fcmpl/fcmpg):
+      - Pops value2, then value1 from the operand stack
+      - Compares value1 ? value2
+      - Pushes:
+          -1 if value1 < value2
+           0 if value1 == value2
+           1 if value1 > value2
+      - For NaN, result depends on the variant:
+          * cmpl: result is -1 if either is NaN
+          * cmpg: result is 1  if either is NaN
+    """
+
+    type: jvm.Type   # Float() or Double()
+    mode: str        # "l"/"lt"/"less" → *cmpl, "g"/"gt"/"greater" → *cmpg
+
+    @classmethod
+    def from_json(cls, json: dict) -> "Opcode":
+        # jvm2json usually gives a type description and some indication of ordering.
+        t = jvm.Type.from_json(json["type"])
+
+        # Be forgiving about the field name used:
+        mode = (
+            json.get("mode")
+            or json.get("order")
+            or json.get("nan")   # some tools use nan-policy key
+            or "gt"              # safe default: cmpg variant
+        )
+
+        return cls(
+            offset=json["offset"],
+            type=t,
+            mode=mode,
+        )
+
+    def real(self) -> str:
+        """Return the concrete JVM mnemonic."""
+        # normalize mode to something simple
+        m = self.mode.lower()
+        is_less = m in ("l", "lt", "less", "cmpl")
+        is_great = m in ("g", "gt", "greater", "cmpg")
+
+        if isinstance(self.type, jvm.Double):
+            if is_less:
+                return "dcmpl"
+            elif is_great:
+                return "dcmpg"
+            # fallback if unknown: pick a reasonable default
+            return "dcmpg"
+
+        if isinstance(self.type, jvm.Float):
+            if is_less:
+                return "fcmpl"
+            elif is_great:
+                return "fcmpg"
+            return "fcmpg"
+
+        # If we ever get a weird type, surface it loudly:
+        raise NotImplementedError(f"comparefloating for type {self.type!r}")
+
+    def semantics(self) -> str | None:
+        # Optional, but handy for debugging/logging.
+        return """
+        bc[i].opr = 'comparefloating'
+        bc[i].type = T
+        bc[i].mode = m
+        --------------------------------[comparefloating]
+        // pops v2, v1; pushes int result
+        // result = -1 if v1 < v2
+        // result = 0  if v1 == v2
+        // result = 1  if v1 > v2
+        // NaN behaviour depends on m (cmpl/cmpg)
+        """
+
+    def mnemonic(self) -> str:
+        # Used as an index in jpamb; typically we just use the real mnemonic
+        return self.real()
+
+    def __str__(self):
+        return f"comparefloating:{self.type} {self.mode}"
 
 
 @dataclass(frozen=True, order=True)
@@ -639,6 +789,14 @@ class Binary(Opcode):
                 return "imul"
             case (jvm.Int(), BinaryOpr.Sub):
                 return "isub"
+            case (jvm.Double(), BinaryOpr.Add):
+                return "dadd"
+            case (jvm.Double(), BinaryOpr.Sub):
+                return "dsub"
+            case (jvm.Double(), BinaryOpr.Mul):
+                return "dmul"
+            case (jvm.Double(), BinaryOpr.Div):
+                return "ddiv"
         raise NotImplementedError(f"Unhandled real {self!r}")
 
     def semantics(self) -> str | None:
@@ -1054,9 +1212,9 @@ class Return(Opcode):
     type: jvm.Type | None  # Return type (None for void return)
 
     def __post_init__(self):
-        assert (
-            self.type is None or self.type.is_stacktype()
-        ), "return only handles stack types {self.type()}"
+        assert self.type is None or self.type.is_stacktype(), (
+            "return only handles stack types {self.type()}"
+        )
 
     @classmethod
     def from_json(cls, json: dict) -> "Opcode":

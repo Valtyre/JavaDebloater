@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from typing import Callable, Protocol, Self, Iterable, Optional, Iterator, NoReturn
 
 
+
 @dataclass(frozen=True, order=True)
 class ClassName:
     """The name of a class, inner classes must use the $ syntax"""
@@ -104,6 +105,13 @@ class Type(ABC):
                     r = Float()
                 case "D":
                     r = Double()
+                case "L":
+                    j = input.find(";", i)
+                    if j == -1:
+                        raise ValueError(f"Unterminated object type in {input}")
+                    classname = input[i+1:j]
+                    r = Object(ClassName.decode(classname.replace("/", ".")))
+                    i = j
                 case "[":  # ]
                     stack.append(Array)
                     i += 1
@@ -135,6 +143,8 @@ class Type(ABC):
                     return Int()
                 case "int":
                     return Int()
+                case "double":
+                    return Double()
                 case "char":
                     return Char()
                 case "short":
@@ -143,16 +153,32 @@ class Type(ABC):
                     return Reference()
                 case "boolean":
                     return Boolean()
+                case "float":
+                    return Float()
+                case "String":
+                    return String()
         if "base" in json:
             return Type.from_json(json["base"])
         if "kind" in json:
             match json["kind"]:
                 case "array":
+                    # e.g. {"kind": "array", "type": {...}}
                     return Array(Type.from_json(json["type"]))
+
+                case "class":
+                    # e.g. {"kind": "class", "name": "java/lang/String"}
+                    classname = json["name"].replace("/", ".")
+                    return Object(ClassName.decode(classname))
+
+                case "ref":
+                    # Some JSON encodes references this way
+                    return Reference()
+
                 case kind:
                     raise NotImplementedError(
                         f"Unknown kind {kind}, in Type.from_json: {json!r}"
                     )
+
 
         raise NotImplementedError(f"Type.from_json: {json!r}")
 
@@ -393,6 +419,25 @@ class Double(StackType):
 
     def math(self):
         return "double"
+    
+@dataclass(frozen=True)
+class String(Type):
+    """
+    A string type
+    """
+
+    _instance = None
+
+    def __new__(cls) -> "String":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def encode(self):
+        return "Ljava/lang/String;"
+
+    def math(self):
+        return "string"
 
 
 @dataclass(frozen=True, order=True)
@@ -593,6 +638,12 @@ class Value:
                 return str(self.value)
             case Char():
                 return f"'{self.value}'"
+            case Double():
+                return str(self.value)
+            case String():
+                return f'"{self.value}"'
+            case Object(name) if name.dotted() == "java.lang.String":
+                return f'"{self.value}"'
             case Array(content):
                 assert isinstance(self.value, Iterable)
                 match content:
@@ -610,6 +661,10 @@ class Value:
     @classmethod
     def int(cls, n: int) -> Self:
         return cls(Int(), n)
+    
+    @classmethod
+    def double(cls, n: float) -> Self:
+        return cls(Double(), n)
 
     @classmethod
     def boolean(cls, n: bool) -> Self:
@@ -619,18 +674,14 @@ class Value:
     def char(cls, char: str) -> Self:
         assert len(char) == 1, f"string should be exactly one char, was {char!r}"
         return cls(Char(), char)
+    
+    @classmethod
+    def string(cls, s: str) -> Self:
+        return cls(String(), s)
 
     @classmethod
     def array(cls, type: Type, content: Iterable) -> Self:
         return cls(Array(type), tuple(content))
-    
-    @classmethod
-    def double(cls, x: float) -> Self:
-        return cls(Double(), x)
-
-    @classmethod
-    def string(cls, s: str) -> Self:
-        return cls(Reference(), s)
 
     @classmethod
     def from_json(cls, json: dict | None) -> Self:
@@ -666,13 +717,14 @@ class ValueParser:
     @staticmethod
     def tokenize(string):
         token_specification = [
-            ("OPEN_ARRAY", r"\[[IC]:"),      # [I: or [C:
+            ("OPEN_ARRAY", r"\[[IC]:"),
             ("CLOSE_ARRAY", r"\]"),
-            ("FLOAT", r"-?\d+\.\d+"),       # NEW: doubles like -1.0, 2.5
-            ("INT", r"-?\d+"),              # integers (order matters: FLOAT before INT)
+            ("DOUBLE", r"-?\d+\.\d+"),
+            ("INT", r"-?\d+"),
             ("BOOL", r"true|false"),
-            ("STRING", r"\"[^\"]*\""),      # NEW: "foo", "bar", ""
-            ("CHAR", r"'[^']'"),            # single char: 'x'
+            ("STRING", r'"[^"]*"'),
+            ("CHAR", r"'[^']'"),
+            ("IDENT", r"[A-Za-z_]\w*"),
             ("COMMA", r","),
             ("SKIP", r"[ \t]+"),
         ]
@@ -714,16 +766,18 @@ class ValueParser:
     def parse_value(self):
         next = self.head or self.expected("token")
         match next.kind:
-            case "FLOAT":
-                return Value.double(self.parse_float())
             case "INT":
                 return Value.int(self.parse_int())
-            case "CHAR":
-                return Value.char(self.parse_char())
             case "STRING":
                 return Value.string(self.parse_string())
+            case "IDENT":
+                return Value.string(self.parse_ident()) 
+            case "CHAR":
+                return Value.char(self.parse_char())
             case "BOOL":
                 return Value.boolean(self.parse_bool())
+            case "DOUBLE":
+                return Value(Double(), self.parse_double())
             case "OPEN_ARRAY":
                 return self.parse_array()
         self.expected("char")
@@ -731,9 +785,17 @@ class ValueParser:
     def parse_int(self):
         tok = self.expect("INT")
         return int(tok.value)
-
-    def parse_float(self): 
-        tok = self.expect("FLOAT")
+    
+    def parse_string(self):
+        tok = self.expect("STRING")
+        return tok.value[1:-1]
+    
+    def parse_ident(self):
+        tok = self.expect("IDENT")
+        return tok.value
+    
+    def parse_double(self):
+        tok = self.expect("DOUBLE")
         return float(tok.value)
 
     def parse_bool(self):
@@ -744,10 +806,6 @@ class ValueParser:
         tok = self.expect("CHAR")
         return tok.value[1]
 
-    def parse_string(self):
-        tok = self.expect("STRING")
-        return tok.value[1:-1]
-    
     def parse_array(self):
         key = self.expect("OPEN_ARRAY")
         if key.value == "[I:":  # ]
