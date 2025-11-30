@@ -1,222 +1,99 @@
-# Abstract domains for machine word analysis
-# Based on interval analysis and bitfield domains from the course material
+# Machine word abstract domain - Bitfield domain
+# Based on https://en.wikipedia.org/wiki/Abstract_interpretation#Machine_word_abstract_domains
+# 
+# The bitfield domain treats each bit in a machine word separately using 3-valued logic: {0, 1, ⊥}
+# where ⊥ represents "unknown" (could be either 0 or 1).
+# 
+# Concretization function γ:
+#   γ(0) = {0}
+#   γ(1) = {1}  
+#   γ(⊥) = {0, 1}
+#
+# Abstraction function α:
+#   α({0}) = 0
+#   α({1}) = 1
+#   α({0,1}) = ⊥
+#   α({}) = ⊥
 
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Optional, Set, Literal
-import math
+from typing import Literal
 
-# constants for three-valued logic
-THREE_VALUED_0 = "0"
-THREE_VALUED_1 = "1" 
-THREE_VALUED_BOT = "⊥"  # unknown bit value
-
-@dataclass(frozen=True)
-class Interval:
-    """Basic interval domain [low, high]"""
-    low: float = -math.inf
-    high: float = math.inf
-
-    @staticmethod
-    def of(*values: int):
-        # create interval from concrete values
-        if not values:
-            return Interval()
-        return Interval(min(values), max(values))
-
-    def is_bottom(self) -> bool:
-        # bottom means impossible/empty (low > high)
-        return self.low > self.high
-    
-    def is_top(self) -> bool:
-        return self.low == -math.inf and self.high == math.inf
-
-    def __repr__(self) -> str:
-        if self.is_bottom():
-            return "⊥"
-        if self.is_top():
-            return "(-∞, +∞)"
-        return f"[{int(self.low) if self.low != -math.inf else '-∞'}, {int(self.high) if self.high != math.inf else '+∞'}]"
-
-    def join(self, other: "Interval") -> "Interval":
-        # least upper bound - take widest range
-        if self.is_bottom(): 
-            return other
-        if other.is_bottom(): 
-            return self
-        return Interval(min(self.low, other.low), max(self.high, other.high))
-
-    def meet(self, other: "Interval") -> "Interval":
-        # intersection of intervals
-        low = max(self.low, other.low)
-        high = min(self.high, other.high)
-        return Interval(low, high)
-
-    def widen(self, other: "Interval") -> "Interval":
-        # widening operator for loop termination
-        low = self.low if self.low <= other.low else -math.inf
-        high = self.high if self.high >= other.high else math.inf
-        return Interval(low, high)
-
-    def __add__(self, other: "Interval") -> "Interval":
-        if self.is_bottom() or other.is_bottom():
-            return Interval(1, 0)  # bottom
-        return Interval(self.low + other.low, self.high + other.high)
-
-    def __sub__(self, other: "Interval") -> "Interval":
-        if self.is_bottom() or other.is_bottom():
-            return Interval(1, 0)
-        return Interval(self.low - other.high, self.high - other.low)
-
-    def __mul__(self, other: "Interval") -> "Interval":
-        if self.is_bottom() or other.is_bottom():
-            return Interval(1, 0)
-        a, b, c, d = self.low, self.high, other.low, other.high
-        # need to check all combinations
-        return Interval(min(a*c, a*d, b*c, b*d), max(a*c, a*d, b*c, b*d))
-
-    def __neg__(self) -> "Interval":
-        if self.is_bottom():
-            return Interval(1, 0)
-        return Interval(-self.high, -self.low)
-    
-    def __and__(self, other: "Interval") -> "Interval":
-        # bitwise AND - conservative approximation
-        if self.is_bottom() or other.is_bottom():
-            return Interval(1, 0)
-        
-        if self.low < 0 or other.low < 0:
-            # negative numbers make this tricky
-            return Interval(-max(abs(self.high), abs(other.high)), 
-                          max(self.high, other.high))
-        
-        return Interval(0, min(self.high, other.high))
-    
-    def __or__(self, other: "Interval") -> "Interval":
-        if self.is_bottom() or other.is_bottom():
-            return Interval(1, 0)
-        
-        if self.low < 0 or other.low < 0:
-            return Interval(-max(abs(self.high), abs(other.high)), 
-                          max(self.high, other.high))
-        
-        return Interval(0, max(self.high, other.high))
-    
-    def __xor__(self, other: "Interval") -> "Interval":
-        if self.is_bottom() or other.is_bottom():
-            return Interval(1, 0)
-        
-        if self.low < 0 or other.low < 0:
-            return Interval(-max(abs(self.high), abs(other.high)), 
-                          max(self.high, other.high))
-        
-        return Interval(0, max(self.high, other.high))
-    
-    def lshift(self, bits: int) -> "Interval":
-        if self.is_bottom():
-            return Interval(1, 0)
-        return Interval(self.low * (2 ** bits), self.high * (2 ** bits))
-    
-    def rshift(self, bits: int) -> "Interval":
-        if self.is_bottom():
-            return Interval(1, 0)
-        return Interval(self.low // (2 ** bits), self.high // (2 ** bits))
-
-
-@dataclass(frozen=True, order=True)
-class SignedInterval(Interval):
-    """Signed interval with bit width (default 32-bit)"""
-    bit_width: int = 32
-    
-    def __post_init__(self):
-        min_val = -(2 ** (self.bit_width - 1))
-        max_val = 2 ** (self.bit_width - 1) - 1
-        
-        # clamp to valid range
-        if not (self.low == -math.inf or self.low == math.inf):
-            object.__setattr__(self, 'low', max(self.low, min_val))
-        if not (self.high == -math.inf or self.high == math.inf):
-            object.__setattr__(self, 'high', min(self.high, max_val))
-
-
-@dataclass(frozen=True, order=True)
-class UnsignedInterval(Interval):
-    """Unsigned interval [0, 2^n - 1]"""
-    bit_width: int = 32
-    
-    def __post_init__(self):
-        min_val = 0
-        max_val = 2 ** self.bit_width - 1
-        
-        if not (self.low == -math.inf or self.low == math.inf):
-            object.__setattr__(self, 'low', max(self.low, min_val))
-        if not (self.high == -math.inf or self.high == math.inf):
-            object.__setattr__(self, 'high', min(self.high, max_val))
+# Three-valued logic constants
+BitValue = Literal["0", "1", "⊥"]
 
 
 @dataclass(frozen=True)
 class Bitfield:
-    """Bitfield with 3-valued logic: 0, 1, or ⊥ (unknown)"""
-    bits: tuple = ()
+    """
+    Bitfield domain for machine word abstraction.
+    
+    A machine word of width n is treated as an array of n abstract bit values,
+    each from the set {0, 1, ⊥} where:
+    - 0: definitely zero
+    - 1: definitely one
+    - ⊥: unknown (could be 0 or 1)
+    
+    Supports bitwise operations using Kleene's three-valued logic.
+    """
+    bits: tuple[BitValue, ...]
     bit_width: int = 32
     
-    def __init__(self, bits: tuple | str = "⊥", bit_width: int = 32):
+    def __init__(self, bits: tuple[BitValue, ...] | str = "⊥", bit_width: int = 32):
+        """
+        Create a bitfield.
+        
+        Args:
+            bits: Either a tuple of bit values or a single value to replicate
+            bit_width: Width of the machine word in bits
+        """
         if isinstance(bits, str):
             object.__setattr__(self, 'bits', tuple([bits] * bit_width))
         else:
             object.__setattr__(self, 'bits', bits)
-        object.__setattr__(self, 'bit_width', bit_width)
+        object.__setattr__(self, 'bit_width', len(self.bits) if isinstance(bits, tuple) else bit_width)
     
     @staticmethod
     def of(value: int, bit_width: int = 32) -> "Bitfield":
-        # convert concrete value to bitfield
+        """
+        Abstract a concrete integer value to a bitfield.
+        
+        This implements the abstraction function α for singleton sets:
+        α({value}) = bitfield representation of value
+        """
         bits_list = []
         for i in range(bit_width):
             bit_val = (value >> i) & 1
             bits_list.append("1" if bit_val else "0")
         return Bitfield(tuple(reversed(bits_list)), bit_width)
     
-    def _bit_op_3valued(self, op: str, other: "Bitfield") -> "Bitfield":
-        # 3-valued logic operations
-        result = []
-        for a, b in zip(self.bits, other.bits):
-            if op == "AND":
-                table = {
-                    ("0", "0"): "0", ("0", "1"): "0", ("0", "⊥"): "0",
-                    ("1", "0"): "0", ("1", "1"): "1", ("1", "⊥"): "⊥",
-                    ("⊥", "0"): "0", ("⊥", "1"): "⊥", ("⊥", "⊥"): "⊥",
-                }
-            elif op == "OR":
-                table = {
-                    ("0", "0"): "0", ("0", "1"): "1", ("0", "⊥"): "⊥",
-                    ("1", "0"): "1", ("1", "1"): "1", ("1", "⊥"): "1",
-                    ("⊥", "0"): "⊥", ("⊥", "1"): "1", ("⊥", "⊥"): "⊥",
-                }
-            elif op == "XOR":
-                table = {
-                    ("0", "0"): "0", ("0", "1"): "1", ("0", "⊥"): "⊥",
-                    ("1", "0"): "1", ("1", "1"): "0", ("1", "⊥"): "⊥",
-                    ("⊥", "0"): "⊥", ("⊥", "1"): "⊥", ("⊥", "⊥"): "⊥",
-                }
-            result.append(table.get((a, b), "⊥"))
-        return Bitfield(tuple(result), self.bit_width)
+    @staticmethod
+    def top(bit_width: int = 32) -> "Bitfield":
+        """Create a top element (all bits unknown)"""
+        return Bitfield("⊥", bit_width)
     
-    def __and__(self, other: "Bitfield") -> "Bitfield":
-        return self._bit_op_3valued("AND", other)
-    
-    def __or__(self, other: "Bitfield") -> "Bitfield":
-        return self._bit_op_3valued("OR", other)
-    
-    def __xor__(self, other: "Bitfield") -> "Bitfield":
-        return self._bit_op_3valued("XOR", other)
-    
-    def __invert__(self) -> "Bitfield":
-        # flip bits (0->1, 1->0, ⊥ stays ⊥)
-        result = tuple("1" if b == "0" else "0" if b == "1" else "⊥" for b in self.bits)
-        return Bitfield(result, self.bit_width)
+    def to_int(self) -> int | None:
+        """
+        Concretize bitfield to integer if all bits are known.
+        Returns None if any bit is unknown.
+        """
+        if "⊥" in self.bits:
+            return None
+        result = 0
+        for bit in self.bits:
+            result = (result << 1) | (1 if bit == "1" else 0)
+        return result
     
     def join(self, other: "Bitfield") -> "Bitfield":
-        # merge bitfields - different bits become unknown
+        """
+        Least upper bound (⊔): merge two bitfields.
+        Different bits become unknown (⊥).
+        
+        This computes the smallest bitfield that covers both inputs.
+        """
+        if self.bit_width != other.bit_width:
+            raise ValueError("Bitfields must have same width")
+        
         result = []
         for a, b in zip(self.bits, other.bits):
             if a == b:
@@ -225,8 +102,142 @@ class Bitfield:
                 result.append("⊥")
         return Bitfield(tuple(result), self.bit_width)
     
+    def meet(self, other: "Bitfield") -> "Bitfield":
+        """
+        Greatest lower bound (⊓): intersection of two bitfields.
+        Returns most precise information from both.
+        """
+        if self.bit_width != other.bit_width:
+            raise ValueError("Bitfields must have same width")
+        
+        result = []
+        for a, b in zip(self.bits, other.bits):
+            if a == "⊥":
+                result.append(b)
+            elif b == "⊥":
+                result.append(a)
+            elif a == b:
+                result.append(a)
+            else:
+                # Contradiction: one bit is 0, other is 1
+                raise ValueError("Incompatible bitfields in meet")
+        return Bitfield(tuple(result), self.bit_width)
+    
+    def __and__(self, other: "Bitfield") -> "Bitfield":
+        """
+        Bitwise AND using three-valued logic.
+        
+        Truth table (from Wikipedia):
+            A ∧ B | 0  ⊥  1
+            ------+---------
+            0     | 0  0  0
+            ⊥     | 0  ⊥  ⊥
+            1     | 0  ⊥  1
+        """
+        if self.bit_width != other.bit_width:
+            raise ValueError("Bitfields must have same width")
+        
+        result = []
+        for a, b in zip(self.bits, other.bits):
+            # AND truth table
+            if a == "0" or b == "0":
+                result.append("0")
+            elif a == "1" and b == "1":
+                result.append("1")
+            else:
+                result.append("⊥")
+        return Bitfield(tuple(result), self.bit_width)
+    
+    def __or__(self, other: "Bitfield") -> "Bitfield":
+        """
+        Bitwise OR using three-valued logic.
+        
+        Truth table (from Wikipedia):
+            A ∨ B | 0  ⊥  1
+            ------+---------
+            0     | 0  ⊥  1
+            ⊥     | ⊥  ⊥  1
+            1     | 1  1  1
+        """
+        if self.bit_width != other.bit_width:
+            raise ValueError("Bitfields must have same width")
+        
+        result = []
+        for a, b in zip(self.bits, other.bits):
+            # OR truth table
+            if a == "1" or b == "1":
+                result.append("1")
+            elif a == "0" and b == "0":
+                result.append("0")
+            else:
+                result.append("⊥")
+        return Bitfield(tuple(result), self.bit_width)
+    
+    def __xor__(self, other: "Bitfield") -> "Bitfield":
+        """
+        Bitwise XOR using three-valued logic.
+        
+        XOR is 1 if bits differ, 0 if same, ⊥ if unknown.
+        """
+        if self.bit_width != other.bit_width:
+            raise ValueError("Bitfields must have same width")
+        
+        result = []
+        for a, b in zip(self.bits, other.bits):
+            if a == "⊥" or b == "⊥":
+                result.append("⊥")
+            elif a != b:
+                result.append("1")
+            else:
+                result.append("0")
+        return Bitfield(tuple(result), self.bit_width)
+    
+    def __invert__(self) -> "Bitfield":
+        """
+        Bitwise NOT using three-valued logic.
+        
+        Truth table (from Wikipedia):
+            NOT(A) | Result
+            -------+-------
+            0      | 1
+            ⊥      | ⊥
+            1      | 0
+        """
+        result = tuple("1" if b == "0" else "0" if b == "1" else "⊥" for b in self.bits)
+        return Bitfield(result, self.bit_width)
+    
+    def lshift(self, n: int) -> "Bitfield":
+        """Left shift by n positions, filling with zeros"""
+        if n >= self.bit_width:
+            return Bitfield(tuple(["0"] * self.bit_width), self.bit_width)
+        new_bits = self.bits[n:] + tuple(["0"] * n)
+        return Bitfield(new_bits, self.bit_width)
+    
+    def rshift(self, n: int) -> "Bitfield":
+        """Right shift by n positions, filling with zeros (logical shift)"""
+        if n >= self.bit_width:
+            return Bitfield(tuple(["0"] * self.bit_width), self.bit_width)
+        new_bits = tuple(["0"] * n) + self.bits[:-n]
+        return Bitfield(new_bits, self.bit_width)
+    
+    def is_top(self) -> bool:
+        """Check if this is the top element (all bits unknown)"""
+        return all(b == "⊥" for b in self.bits)
+    
     def is_bottom(self) -> bool:
+        """
+        Bitfield domain has no bottom element.
+        Every bitfield pattern is realizable.
+        """
         return False
     
     def __repr__(self) -> str:
         return "".join(self.bits)
+    
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, Bitfield):
+            return False
+        return self.bits == other.bits
+    
+    def __hash__(self) -> int:
+        return hash(self.bits)
