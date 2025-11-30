@@ -1,0 +1,1148 @@
+┌ Info
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' info
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ My First Analyzer
+│││ 1.0
+│││ Student Group Name
+│││ simple,python
+│││ no
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' info
+│┌ Results
+││ - group: Student Group Name
+││ - name: My First Analyzer
+││ - system: None
+││ - tags: ['simple', 'python']
+││ - version: 1.0
+│└ Results
+└ Info
+┌ Case jpamb.cases.Arrays.arrayContent:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayContent:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayContent:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -9.20
+└ Case jpamb.cases.Arrays.arrayContent:()V
+┌ Case jpamb.cases.Arrays.arrayInBounds:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayInBounds:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayInBounds:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Arrays.arrayInBounds:()V
+┌ Case jpamb.cases.Arrays.arrayIsNull:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayIsNull:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayIsNull:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -inf
+└ Case jpamb.cases.Arrays.arrayIsNull:()V
+┌ Case jpamb.cases.Arrays.arrayIsNullLength:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayIsNullLength:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayIsNullLength:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -inf
+└ Case jpamb.cases.Arrays.arrayIsNullLength:()V
+┌ Case jpamb.cases.Arrays.arrayLength:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayLength:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayLength:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Arrays.arrayLength:()V
+┌ Case jpamb.cases.Arrays.arrayNotEmpty:([I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayNotEmpty:([I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayNotEmpty:([I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Arrays.arrayNotEmpty:([I)V
+┌ Case jpamb.cases.Arrays.arrayOutOfBounds:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayOutOfBounds:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arrayOutOfBounds:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -inf
+└ Case jpamb.cases.Arrays.arrayOutOfBounds:()V
+┌ Case jpamb.cases.Arrays.arraySometimesNull:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arraySometimesNull:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arraySometimesNull:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -inf
+└ Case jpamb.cases.Arrays.arraySometimesNull:(I)V
+┌ Case jpamb.cases.Arrays.arraySpellsHello:([C)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arraySpellsHello:([C)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arraySpellsHello:([C)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -inf
+└ Case jpamb.cases.Arrays.arraySpellsHello:([C)V
+┌ Case jpamb.cases.Arrays.arraySumIsLarge:([I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arraySumIsLarge:([I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.arraySumIsLarge:([I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Arrays.arraySumIsLarge:([I)V
+┌ Case jpamb.cases.Arrays.binarySearch:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.binarySearch:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Arrays.binarySearch:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Arrays.binarySearch:(I)V
+┌ Case jpamb.cases.Calls.allPrimesArePositive:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.allPrimesArePositive:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.allPrimesArePositive:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -inf
+└ Case jpamb.cases.Calls.allPrimesArePositive:(I)V
+┌ Case jpamb.cases.Calls.callsAssertFalse:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertFalse:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertFalse:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -9.20
+└ Case jpamb.cases.Calls.callsAssertFalse:()V
+┌ Case jpamb.cases.Calls.callsAssertFib:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertFib:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertFib:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Calls.callsAssertFib:(I)V
+┌ Case jpamb.cases.Calls.callsAssertIf:(Z)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertIf:(Z)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertIf:(Z)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Calls.callsAssertIf:(Z)V
+┌ Case jpamb.cases.Calls.callsAssertIfWithTrue:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertIfWithTrue:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertIfWithTrue:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Calls.callsAssertIfWithTrue:()V
+┌ Case jpamb.cases.Calls.callsAssertTrue:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertTrue:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Calls.callsAssertTrue:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Calls.callsAssertTrue:()V
+┌ Case jpamb.cases.Loops.forever:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Loops.forever:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Loops.forever:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -inf
+└ Case jpamb.cases.Loops.forever:()V
+┌ Case jpamb.cases.Loops.neverAsserts:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Loops.neverAsserts:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Loops.neverAsserts:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -inf
+└ Case jpamb.cases.Loops.neverAsserts:()V
+┌ Case jpamb.cases.Loops.neverDivides:()I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Loops.neverDivides:()I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Loops.neverDivides:()I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -inf
+└ Case jpamb.cases.Loops.neverDivides:()I
+┌ Case jpamb.cases.Loops.terminates:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Loops.terminates:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Loops.terminates:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -9.20
+└ Case jpamb.cases.Loops.terminates:()V
+┌ Case jpamb.cases.Signs.addDoubles:(DD)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.addDoubles:(DD)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.addDoubles:(DD)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Signs.addDoubles:(DD)V
+┌ Case jpamb.cases.Signs.addSigns:(II)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.addSigns:(II)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.addSigns:(II)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Signs.addSigns:(II)V
+┌ Case jpamb.cases.Signs.classifySign:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.classifySign:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.classifySign:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Signs.classifySign:(I)V
+┌ Case jpamb.cases.Signs.compareDoubles:(DD)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.compareDoubles:(DD)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.compareDoubles:(DD)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Signs.compareDoubles:(DD)V
+┌ Case jpamb.cases.Signs.concatStrings:(Ljava/lang/String;Ljava/lang/String;)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.concatStrings:(Ljava/lang/String;Ljava/lang/String;)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.concatStrings:(Ljava/lang/String;Ljava/lang/String;)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Signs.concatStrings:(Ljava/lang/String;Ljava/lang/String;)V
+┌ Case jpamb.cases.Signs.requirePositive:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.requirePositive:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.requirePositive:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Signs.requirePositive:(I)V
+┌ Case jpamb.cases.Signs.returnNegative:()I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.returnNegative:()I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.returnNegative:()I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Signs.returnNegative:()I
+┌ Case jpamb.cases.Signs.returnPositive:()I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.returnPositive:()I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.returnPositive:()I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Signs.returnPositive:()I
+┌ Case jpamb.cases.Signs.returnZero:()I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.returnZero:()I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Signs.returnZero:()I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Signs.returnZero:()I
+┌ Case jpamb.cases.Simple.assertBoolean:(Z)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertBoolean:(Z)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertBoolean:(Z)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Simple.assertBoolean:(Z)V
+┌ Case jpamb.cases.Simple.assertFalse:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertFalse:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertFalse:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -9.20
+└ Case jpamb.cases.Simple.assertFalse:()V
+┌ Case jpamb.cases.Simple.assertInteger:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertInteger:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertInteger:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Simple.assertInteger:(I)V
+┌ Case jpamb.cases.Simple.assertPositive:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertPositive:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertPositive:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Simple.assertPositive:(I)V
+┌ Case jpamb.cases.Simple.assertTrue:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertTrue:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.assertTrue:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Simple.assertTrue:()V
+┌ Case jpamb.cases.Simple.checkBeforeAssert:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.checkBeforeAssert:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.checkBeforeAssert:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Simple.checkBeforeAssert:(I)V
+┌ Case jpamb.cases.Simple.checkBeforeDivideByN2:(I)I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.checkBeforeDivideByN2:(I)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Simple.checkBeforeDivideByN2:(I)I
+┌ Case jpamb.cases.Simple.checkBeforeDivideByN:(I)I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.checkBeforeDivideByN:(I)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Simple.checkBeforeDivideByN:(I)I
+┌ Case jpamb.cases.Simple.divideByN:(I)I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.divideByN:(I)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.divideByN:(I)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 0.70
+└ Case jpamb.cases.Simple.divideByN:(I)I
+┌ Case jpamb.cases.Simple.divideByNMinus10054203:(I)I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.divideByNMinus10054203:(I)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.divideByNMinus10054203:(I)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 0.70
+└ Case jpamb.cases.Simple.divideByNMinus10054203:(I)I
+┌ Case jpamb.cases.Simple.divideByZero:()I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.divideByZero:()I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.divideByZero:()I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.10
+└ Case jpamb.cases.Simple.divideByZero:()I
+┌ Case jpamb.cases.Simple.divideZeroByZero:(II)I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.divideZeroByZero:(II)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.divideZeroByZero:(II)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 0.70
+└ Case jpamb.cases.Simple.divideZeroByZero:(II)I
+┌ Case jpamb.cases.Simple.earlyReturn:()I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.earlyReturn:()I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.earlyReturn:()I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Simple.earlyReturn:()I
+┌ Case jpamb.cases.Simple.justAdd:(II)I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.justAdd:(II)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.justAdd:(II)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Simple.justAdd:(II)I
+┌ Case jpamb.cases.Simple.justMulitply:(II)I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.justMulitply:(II)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.justMulitply:(II)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Simple.justMulitply:(II)I
+┌ Case jpamb.cases.Simple.justReturn:()I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.justReturn:()I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.justReturn:()I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Simple.justReturn:()I
+┌ Case jpamb.cases.Simple.justReturnNothing:()V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.justReturnNothing:()V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.justReturnNothing:()V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score 5.50
+└ Case jpamb.cases.Simple.justReturnNothing:()V
+┌ Case jpamb.cases.Simple.multiError:(Z)I
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.multiError:(Z)I'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Simple.multiError:(Z)I'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -14.00
+└ Case jpamb.cases.Simple.multiError:(Z)I
+┌ Case jpamb.cases.Tricky.collatz:(I)V
+│┌ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Tricky.collatz:(I)V'
+││┌ Stderr
+││└ Stderr
+││┌ Stdout
+│││ ok;90%
+│││ divide by zero;10%
+│││ assertion error;5%
+│││ out of bounds;0%
+│││ null pointer;0%
+│││ *;0%
+││└ Stdout
+│└ Run 'C:\Users\vieri\AppData\Local\Python\pythoncore-3.14-64\python.exe' 'solutions\my_analyzer.py' 'jpamb.cases.Tricky.collatz:(I)V'
+│┌ Results
+││ - *: 0.00% -inf
+││ - assertion error: 5.00% -9.00
+││ - divide by zero: 10.00% -4.00
+││ - null pointer: 0.00% -inf
+││ - ok: 90.00% 4.00
+││ - out of bounds: 0.00% -inf
+│└ Results
+│ Score -4.40
+└ Case jpamb.cases.Tricky.collatz:(I)V
+Total -inf
