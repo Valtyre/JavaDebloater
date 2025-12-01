@@ -18,6 +18,7 @@ public class Calls {
     
   }
 
+
   public static void assertIf(boolean test) {
     if (test) {
       assertTrue();
@@ -63,6 +64,17 @@ public class Calls {
   @Case("(0) -> assertion error")
   @Tag({ CALL, RECURSION })
   public static void callsAssertFib(int i) {
+    int unused = 12345;
+
+    if (i < -1000000000) {    // impossible for typical input domain
+      int x = i + 1;         // x is unused → removable
+    }
+
+    if (true) {               // always true → debloatable
+      int y = i + 1;        // y is unused → removable
+    }
+
+    doNothing();
     assert fib(i) == 21;
   }
 

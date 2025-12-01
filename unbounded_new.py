@@ -218,6 +218,17 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                 s.pc = frame.pc
                 yield s
 
+            
+            case jvm.Dup():
+                if not frame.stack:
+                    raise RuntimeError("stack underflow on dup")
+                v = frame.stack.peek()
+                cv = copy.copy(v)
+                frame.stack.push(cv)
+                frame.pc = PC(frame.pc.method, offset + 1)
+                s.pc = frame.pc
+                yield s
+
             case jvm.Goto(target=t):
                 frame.pc = PC(frame.pc.method, t)
                 yield state
@@ -238,6 +249,69 @@ def step(sts: StateSet ) -> Iterable[A | str]:
             case jvm.Throw():
                 break
 
+            case jvm.InvokeSpecial(method=method):
+                frame.pc = PC(frame.pc.method, offset + 1)
+                s.pc = frame.pc
+                yield s
+
+            case jvm.InvokeStatic(method=method):
+                arg_count = len(method.methodid.params._elements)
+                args = []
+                for _ in range(arg_count):
+                    args.append(frame.stack.pop())
+                args.reverse()
+
+                newframe = Frame.from_method(method)
+                for i, arg in enumerate(args):
+                    newframe.locals[i] = arg
+
+                s.frames.push(newframe)
+                frame.pc = PC(frame.pc.method, offset + 1)
+                s.pc = frame.pc
+                yield s
+            
+            case jvm.InvokeDynamic(offset=offset, stack_size=stack_size):
+                args = []
+                for _ in range(stack_size):
+                    args.append(frame.stack.pop())
+
+                args.reverse()
+            
+                frame.stack.push(jvm.Value(jvm.String(), "<dyn-string>"))
+
+                frame.pc = PC(frame.pc.method, offset + 1)
+                s.pc = frame.pc
+                yield s
+
+            case jvm.InvokeVirtual(method=m):
+                cname = m.classname.dotted()
+                mname = m.methodid.name
+
+                if (cname in ("java/lang/String", "java.lang.String")
+                        and mname == "length"):
+                    frame.stack.pop()
+                    frame.stack.push(jvm.Value.int(1)) 
+
+                    frame.pc = PC(frame.pc.method, offset + 1)
+                    s.pc = frame.pc
+                    yield s
+
+                arg_count = len(m.methodid.params._elements) + 1
+
+                args: list[jvm.Value] = []
+                for _ in range(arg_count):
+                    args.append(frame.stack.pop())
+                args.reverse()
+
+                newframe = Frame.from_method(m)
+                for i, arg in enumerate(args):
+                    newframe.locals[i] = arg
+
+                s.frames.push(newframe)
+                frame.pc = PC(frame.pc.method, offset + 1)
+                s.pc = frame.pc
+                yield s
+
             case jvm.Incr(index=i, amount=amt):
                 v = frame.locals[i]
                 if not isinstance(v, SignSet):
@@ -248,7 +322,7 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                 v = v.add(SignSet.abstract_value(amt))
                 frame.pc = PC(frame.pc.method, offset + 1)
                 s.pc = frame.pc
-                return state
+                yield s
 
             case jvm.Binary(operant=oper):
                 v2, v1 = frame.stack.pop(), frame.stack.pop()
@@ -372,6 +446,69 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                     s = copy.deepcopy(state)
                     frame = s.frames.peek()
 
+            case jvm.If(condition=cond, target=target):
+                # Pop right, then left (same order as your concrete interpreter)
+                v2 = frame.stack.pop()
+                v1 = frame.stack.pop()
+                # --- Normalise both to SignSet ---
+
+                if not isinstance(v1, SignSet):
+                    v1: SignSet = SignSet.abstract_value(v1)
+                    
+                if not isinstance(v2, SignSet):
+                    v2: SignSet = SignSet.abstract_value(v2)
+                
+                logger.info(f"IF on values {v1} and {v2} with condition {cond}, and target {target}")
+
+
+                def has(s: SignSet, sym: str) -> bool:
+                    return sym in s.signs
+
+                temp_target = -1
+            
+                for sign1 in v1.signs:
+                    for sign2 in v2.signs:
+                        match cond:
+                            case "eq":
+                                if sign1 == sign2 :
+                                    temp_target = target
+                                else:
+                                    temp_target = offset + 1
+                            case "ne":
+                                if sign1 != sign2:
+                                    temp_target = target
+                                else:
+                                    temp_target = offset + 1
+                            case "lt":
+                                if (sign1== '-'or sign2 == '+'):
+                                    temp_target = target
+                                else:
+                                    temp_target = offset + 1
+                            case "gt":
+                                if (sign1== '+'or sign2 == '-'):
+                                    temp_target = target
+                                else:
+                                    temp_target = offset + 1
+                            case "ge":
+                                if (sign1== '+' or sign2 == '-') or (sign1==sign2): 
+                                    temp_target = target
+                                else:
+                                    temp_target = offset + 1
+                            case "le":
+                                if (sign1== '-' or sign2 == '+') or (sign1==sign2):
+                                    temp_target = target
+                                else:
+                                    temp_target = offset + 1 
+                            case _:
+                                raise NotImplementedError(f"Unhandled if condition: {cond}")
+                        logger.info(f"IF branch for signs {sign1}, {sign2} goes to {temp_target}, method {frame.pc.method}")
+                        frame.pc = PC(frame.pc.method, temp_target)
+                        s.pc = frame.pc
+                        yield s
+                        s = copy.deepcopy(state)
+                        frame = s.frames.peek()
+
+
 
             case _ : 
                 logger.info(f"Unhandled opcode {bc[pc]}")
@@ -414,7 +551,7 @@ while True:
 if isinstance(sts, StateSet):
     all_states = sts.per_inst.values()
     for state in all_states:
-        logger.success(f"{state.pc.offset}")
+        logger.success(f"{bc[state.pc]} \n STATE: {state} \n FRAME: {state.frames.peek()}")
 
 # all_pc = list(sts.per_inst.keys())
 

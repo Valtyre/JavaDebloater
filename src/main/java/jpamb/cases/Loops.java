@@ -11,8 +11,23 @@ public class Loops {
     while (true) {
     }
   }
-
   @Case("() -> *")
+  @Tag({ LOOP })
+  public static void forlong() {
+    int i = 1;
+    while (i<=100000000) {
+      i++;
+    }
+  }
+  @Case("() -> ok")
+  @Tag({ LOOP })
+  public static void forNo() {
+    int i = 1;
+    while (i>=0) {
+      i++;
+    }
+  }
+  @Case("() -> ok")
   @Tag({ LOOP })
   public static void neverAsserts() {
     int i = 1;
