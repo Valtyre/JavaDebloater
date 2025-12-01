@@ -19,7 +19,7 @@ public class Conditionals {
   }
 
   @Case("(true, true) -> ok")
-  @Case("(true, false) -> assertion error")
+  @Case("(true, false) -> ok")
   @Case("(false, true) -> ok")
   @Case("(false, false) -> ok")
   public static void andCondition(boolean a, boolean b) {
@@ -154,14 +154,14 @@ public class Conditionals {
   }
 
   @Case("(0, 1) -> ok")
-  @Case("(0, 0) -> divide by zero")
+  @Case("(0, 0) -> ok")
   public static void shortCircuitAnd(int a, int b) {
     if (b != 0 && a / b > 0) {
       assert true;
     }
   }
 
-  @Case("(1, 0) -> ok")
+  @Case("(1, 0) -> divide by zero")
   @Case("(0, 0) -> divide by zero")
   public static void noShortCircuitBitwise(int a, int b) {
     if (b != 0 & a / b > 0) {

@@ -27,6 +27,9 @@ class Opcode(ABC):
     def __post_init__(self):
         for f in fields(self):
             v = getattr(self, f.name)
+            # Skip type checking for generic types like tuple[int, ...]
+            if hasattr(f.type, '__origin__'):
+                continue
             assert isinstance(v, f.type), (
                 f"Expected {f.name!r} to be type {f.type}, but was {v!r}, in {self!r}"
             )
@@ -40,12 +43,16 @@ class Opcode(ABC):
                 opr = NewArray
             case "dup":
                 opr = Dup
+            case "pop":
+                opr = Pop
             case "array_store":
                 opr = ArrayStore
             case "array_load":
                 opr = ArrayLoad
             case "binary":
                 opr = Binary
+            case "bitopr":
+                opr = Bitwise
             case "store":
                 opr = Store
             case "load":
@@ -62,12 +69,18 @@ class Opcode(ABC):
                 opr = Cast
             case "new":
                 opr = New
+            case "checkcast":
+                opr = CheckCast
             case "throw":
                 opr = Throw
             case "incr":
                 opr = Incr
             case "goto":
                 opr = Goto
+            case "tableswitch":
+                opr = TableSwitch
+            case "lookupswitch":
+                opr = LookupSwitch
             case "return":
                 opr = Return
             case "negate":
@@ -161,6 +174,8 @@ class Push(Opcode):
             case jvm.Reference():
                 assert self.value.value is None, f"what is {self.value}"
                 return "aconst_null"
+            case jvm.String():
+                return f'ldc ["{self.value.value}"]'
 
         raise NotImplementedError(f"Unhandled {self!r}")
 
@@ -185,6 +200,8 @@ class Push(Opcode):
                 return "ldc2_w"
             case jvm.Reference():
                 return "aconst_null"
+            case jvm.String():
+                return "ldc"
 
         raise NotImplementedError(f"Unhandled {self!r}")
 
@@ -287,6 +304,41 @@ class Dup(Opcode):
 
     def __str__(self):
         return f"dup {self.words}"
+
+
+@dataclass(frozen=True, order=True)
+class Pop(Opcode):
+    """The pop opcode that discards values from the operand stack.
+
+    According to the JVM spec:
+    - Pop and discard the top value(s) from the operand stack
+    - words indicates how many stack slots to pop (1 or 2)
+    - pop removes one 32-bit value (words=1)
+    - pop2 removes one 64-bit value or two 32-bit values (words=2)
+    """
+
+    words: int
+
+    @classmethod
+    def from_json(cls, json: dict) -> Opcode:
+        return cls(
+            offset=json["offset"],
+            words=json["words"],
+        )
+
+    def real(self) -> str:
+        if self.words == 1:
+            return "pop"
+        return "pop2"
+
+    def semantics(self) -> str | None:
+        return None
+
+    def mnemonic(self) -> str:
+        return self.real()
+
+    def __str__(self):
+        return f"pop {self.words}"
 
 
 @dataclass(frozen=True, order=True)
@@ -674,6 +726,26 @@ class BinaryOpr(enum.Enum):
 
     def __str__(self):
         return self.name.lower()
+
+class BitOpr(enum.Enum):
+    And = enum.auto()
+    Or = enum.auto()
+    Xor = enum.auto()
+
+    @staticmethod
+    def from_json(json: str) -> "BitOpr":
+        match json:
+            case "and":
+                return BitOpr.And
+            case "or":
+                return BitOpr.Or
+            case "xor":
+                return BitOpr.Xor
+            case _:
+                raise NotImplementedError()
+
+    def __str__(self):
+        return self.name.lower()
     
 @dataclass(frozen=True, order=True)
 class CompareFloating(Opcode):
@@ -797,6 +869,45 @@ class Binary(Opcode):
                 return "dmul"
             case (jvm.Double(), BinaryOpr.Div):
                 return "ddiv"
+        raise NotImplementedError(f"Unhandled real {self!r}")
+
+    def semantics(self) -> str | None:
+        return None
+
+    def mnemonic(self) -> str:
+        return self.real()
+
+
+@dataclass(frozen=True, order=True)
+class Bitwise(Opcode):
+    type: jvm.Type
+    operant: BitOpr
+
+    @classmethod
+    def from_json(cls, json: dict) -> "Opcode":
+        return cls(
+            offset=json["offset"],
+            type=jvm.Type.from_json(json["type"]),
+            operant=BitOpr.from_json(json["operant"]),
+        )
+
+    def __str__(self):
+        return f"bitopr:{self.type} {self.operant}"
+
+    def real(self) -> str:
+        match (self.type, self.operant):
+            case (jvm.Int(), BitOpr.And):
+                return "iand"
+            case (jvm.Int(), BitOpr.Or):
+                return "ior"
+            case (jvm.Int(), BitOpr.Xor):
+                return "ixor"
+            case (jvm.Long(), BitOpr.And):
+                return "land"
+            case (jvm.Long(), BitOpr.Or):
+                return "lor"
+            case (jvm.Long(), BitOpr.Xor):
+                return "lxor"
         raise NotImplementedError(f"Unhandled real {self!r}")
 
     def semantics(self) -> str | None:
@@ -1079,6 +1190,36 @@ class New(Opcode):
 
 
 @dataclass(frozen=True, order=True)
+class CheckCast(Opcode):
+    """The checkcast opcode that checks object type and casts.
+
+    According to the JVM spec:
+    - Checks whether objectref can be cast to the resolved class, array, or interface type
+    - If successful, objectref is unchanged on operand stack
+    - If objectref is null, checkcast succeeds (null can be cast to any type)
+    - If cast fails, throws ClassCastException
+    """
+
+    type: jvm.Type  # The target type to cast to
+
+    @classmethod
+    def from_json(cls, json: dict) -> "Opcode":
+        return cls(offset=json["offset"], type=jvm.Type.from_json(json["type"]))
+
+    def real(self) -> str:
+        return f"checkcast {self.type.encode()}"
+
+    def semantics(self) -> str | None:
+        return None
+
+    def mnemonic(self) -> str:
+        return "checkcast"
+
+    def __str__(self):
+        return f"checkcast {self.type}"
+
+
+@dataclass(frozen=True, order=True)
 class Throw(Opcode):
     """The throw opcode that throws an exception object.
 
@@ -1195,6 +1336,81 @@ class Goto(Opcode):
 
     def __str__(self):
         return f"goto {self.target}"
+
+
+@dataclass(frozen=True, order=True)
+class TableSwitch(Opcode):
+    """The tableswitch opcode for efficient switch statements with contiguous case values.
+
+    According to the JVM spec:
+    - Access jump table by index and jump
+    - Pops an int index from the operand stack
+    - If index is in range [low, low+len(targets)-1], jumps to targets[index-low]
+    - Otherwise, jumps to default
+    """
+
+    default: int  # Default target offset
+    low: int  # Low value of switch range
+    targets: tuple[int, ...]  # Array of target offsets
+
+    @classmethod
+    def from_json(cls, json: dict) -> "Opcode":
+        return cls(
+            offset=json["offset"],
+            default=json["default"],
+            low=json["low"],
+            targets=tuple(json["targets"]),
+        )
+
+    def real(self) -> str:
+        return f"tableswitch {self.low} to {self.low + len(self.targets) - 1}: default={self.default}"
+
+    def semantics(self) -> str | None:
+        return None
+
+    def mnemonic(self) -> str:
+        return "tableswitch"
+
+    def __str__(self):
+        return f"tableswitch(low={self.low}, targets={list(self.targets)}, default={self.default})"
+
+
+@dataclass(frozen=True, order=True)
+class LookupSwitch(Opcode):
+    """The lookupswitch opcode for switch statements with sparse case values.
+
+    According to the JVM spec:
+    - Access jump table by key and jump
+    - Pops an int key from the operand stack
+    - Searches the pairs for a matching key and jumps to the corresponding target
+    - If no key matches, jumps to default
+    - pairs is a list of (key, target) tuples
+    """
+
+    default: int  # Default target offset
+    pairs: tuple[tuple[int, int], ...]  # Array of (key, target) pairs
+
+    @classmethod
+    def from_json(cls, json: dict) -> "Opcode":
+        pairs = tuple((entry["key"], entry["target"]) for entry in json["targets"])
+        return cls(
+            offset=json["offset"],
+            default=json["default"],
+            pairs=pairs,
+        )
+
+    def real(self) -> str:
+        keys = [k for k, _ in self.pairs]
+        return f"lookupswitch keys={keys}: default={self.default}"
+
+    def semantics(self) -> str | None:
+        return None
+
+    def mnemonic(self) -> str:
+        return "lookupswitch"
+
+    def __str__(self):
+        return f"lookupswitch(pairs={list(self.pairs)}, default={self.default})"
 
 
 @dataclass(frozen=True, order=True)

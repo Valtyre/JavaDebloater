@@ -22,7 +22,10 @@ public class Runtime {
     Tricky.class,
     jpamb.cases.Arrays.class,
     Calls.class,
-    Signs.class);
+    Signs.class,
+    Conditionals.class,
+    Exceptions.class,
+    Strings.class);
 
   public static Case[] cases(Method m) {
     var cases = m.getAnnotation(Cases.class);

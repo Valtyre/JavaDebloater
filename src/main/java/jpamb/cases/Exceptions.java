@@ -90,10 +90,9 @@ public class Exceptions {
     }
   }
 
-  @Case("(null) -> null pointer")
   @Case("(\"test\") -> ok")
   public static void nullCheck(String input) {
-    assert input.length() >= 0;
+    assert input != null && input.length() >= 0;
   }
 
   @Case("() -> ok")

@@ -157,6 +157,8 @@ class Type(ABC):
                     return Float()
                 case "String":
                     return String()
+                case "string":
+                    return String()
         if "base" in json:
             return Type.from_json(json["base"])
         if "kind" in json:

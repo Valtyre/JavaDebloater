@@ -25,6 +25,8 @@ public record CaseContent(
         chars.add("'" + x + "'");
       }
       return "[C:" + String.join(", ", chars) + "]";
+    } else if (obj instanceof String) {
+      return "\"" + obj + "\"";
     } else {
       return obj.toString();
     }
@@ -50,7 +52,9 @@ public record CaseContent(
     SUCCESS,
     NON_TERMINATION,
     NULL_POINTER,
-    OUT_OF_BOUNDS;
+    OUT_OF_BOUNDS,
+    CLASS_CAST,
+    NEGATIVE_ARRAY_SIZE;
 
     public static ResultType parse(String string) {
       if (string.equals("*")) {
@@ -63,6 +67,10 @@ public record CaseContent(
         return NULL_POINTER;
       } else if (string.equals("divide by zero")) {
         return DIVIDE_BY_ZERO;
+      } else if (string.equals("class cast")) {
+        return CLASS_CAST;
+      } else if (string.equals("negative array size")) {
+        return NEGATIVE_ARRAY_SIZE;
       } else if (string.equals("ok")) {
         return SUCCESS;
       } else {
@@ -80,6 +88,10 @@ public record CaseContent(
           return "out of bounds";
         case NULL_POINTER:
           return "null pointer";
+        case CLASS_CAST:
+          return "class cast";
+        case NEGATIVE_ARRAY_SIZE:
+          return "negative array size";
         case NON_TERMINATION:
           return "*";
         case SUCCESS:
@@ -98,8 +110,14 @@ public record CaseContent(
         return NON_TERMINATION;
       } else if (cause instanceof ArrayIndexOutOfBoundsException) {
         return OUT_OF_BOUNDS;
+      } else if (cause instanceof StringIndexOutOfBoundsException) {
+        return OUT_OF_BOUNDS;
       } else if (cause instanceof NullPointerException) {
         return NULL_POINTER;
+      } else if (cause instanceof ClassCastException) {
+        return CLASS_CAST;
+      } else if (cause instanceof NegativeArraySizeException) {
+        return NEGATIVE_ARRAY_SIZE;
       } else {
         throw new RuntimeException("Unexpected");
       }
