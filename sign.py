@@ -12,6 +12,9 @@ Sign: TypeAlias = Literal["+", "-", "0"]
 class SignSet:
     signs: set[Sign]
 
+    def sing_to_signset(sign: Sign) -> "SignSet":
+        return SignSet({sign})
+
     @classmethod
     def bottom(cls) -> "SignSet":
         return cls(set())
@@ -47,8 +50,6 @@ class SignSet:
     def contains(self, sign: str) -> bool:
         return sign in self.signs
 
-    def contains(self, sign: str) -> bool:
-        return sign in self.signs
 
     @classmethod
     def from_int(cls, n: int) -> "SignSet":
@@ -68,6 +69,7 @@ class SignSet:
 
     @classmethod
     def abstract_value(cls, v) -> "SignSet":
+        
         if isinstance(v, SignSet):
             return v
 

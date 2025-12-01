@@ -72,13 +72,13 @@ class Bytecode:
 
 
 @dataclass
-class PerVarFrame:
+class Frame:
     locals: dict[int, SignSet | jvm.Boolean]
-    stack: Stack[SignSet]
+    stack: Stack
     pc: PC
 
-    def from_method(method: jvm.AbsMethodID) -> "PerVarFrame":
-        return PerVarFrame({}, Stack.empty(), PC(method, 0))
+    def from_method(method: jvm.AbsMethodID) -> "Frame":
+        return Frame({}, Stack.empty(), PC(method, 0))
     
     def __str__(self):
         locals = ", ".join(f"{k}:{v}" for k, v in self.locals.items())
@@ -87,14 +87,14 @@ class PerVarFrame:
 
 @dataclass
 class A: # Abstract State
-    frames: Stack[PerVarFrame]
+    frames: Stack[Frame]
     pc: PC
 
     def initialstate_from_method(methodid: jvm.AbsMethodID) -> "A":
-        frame: PerVarFrame = PerVarFrame.from_method(methodid)
+        frame: Frame = Frame.from_method(methodid)
         for i, v in enumerate(methodid.methodid.params._elements):
             if isinstance(v, jvm.Int):
-                frame.locals[i] = SignSet.TOP()
+                frame.locals[i] = SignSet.top()
             else: 
                 frame.locals[i] = v
         return A( Stack.empty().push(frame), PC(methodid, 0))
@@ -123,7 +123,7 @@ class A: # Abstract State
         
         
 
-class StateSet[A]:
+class StateSet:
     per_inst : dict[PC, A]
     needswork : set[PC]
 
@@ -135,42 +135,49 @@ class StateSet[A]:
         self.per_inst = {pc: a}
         self.needswork = {pc}
 
-    def initialize(a: A, pc: PC) -> "StateSet[A]":
+    def initialize(a: A, pc: PC) -> "StateSet":
         return StateSet(a, pc)
 
-    # sts |= astate
-    def __ior__(self, astate: A) -> "StateSet[A]":
-        if astate.pc not in self.per_inst:
-            self.per_inst[astate.pc] = astate
-            self.needswork.add(astate.pc)
-        else:
-            old = self.per_inst[astate.pc]
-            self.per_inst[astate.pc] |= astate
-            if old != self.per_inst[astate.pc]:
-                self.needswork.add(astate.pc)
+    # sts |= sts
+    def __ior__(self, sts: Iterable[A]) -> "StateSet":
+        pc_temp  = set()
+        for state in sts:
+            logger.info(f"Merging state: {state}")
+            if state.pc not in self.per_inst:
+                self.per_inst[state.pc] = state
+                pc_temp.add(state.pc)
+            else:
+                old = self.per_inst[state.pc]
+                self.per_inst[state.pc] |= state
+                logger.debug(f"Merged state at {old != self.per_inst[state.pc]}")
+                if old != self.per_inst[state.pc]:
+                    pc_temp.add(state.pc)
+        logger.info(f"States needing work: {pc_temp}")
+        self.needswork = pc_temp
         return self
   
 
 
-def manystep(sts: StateSet[A] ) -> Iterable[A | str]:
+def step(sts: StateSet ) -> Iterable[A | str]:
     states = copy.deepcopy(sts)
     for pc, state in states.per_instruction():
         s = copy.deepcopy(state)
         frame = s.frames.peek()
+        offset = frame.pc.offset
         # logger.info(f"STEP {pc} \n BC: {bc} \n STATE: {state} \n FRAME: {frame}")
         logger.info(f"STEP {bc[pc]}")
         
-        match bc[frame.pc]:
+        match bc[pc]:
             case jvm.Get(field=field):
                 # assert (field.extension.name == "$assertionsDisabled"), f"unknown field {field}"
                 frame.stack.push(jvm.Value.boolean(False))
-                frame.pc = frame.pc + 1
+                frame.pc = PC(frame.pc.method, offset + 1)
                 s.pc = frame.pc
-                yield state
+                yield s
 
             case jvm.Push(value=v):
                 frame.stack.push(v)
-                frame.pc = frame.pc + 1
+                frame.pc = PC(frame.pc.method, offset + 1)
                 s.pc = frame.pc
                 yield s
                 
@@ -182,7 +189,7 @@ def manystep(sts: StateSet[A] ) -> Iterable[A | str]:
                     frame.stack.push(v)
                 else:
                     raise NotImplementedError(f"Unhandled load type: {t}")
-                frame.pc = frame.pc + 1
+                frame.pc = PC(frame.pc.method, offset + 1)
                 s.pc = frame.pc
                 yield s
 
@@ -192,15 +199,11 @@ def manystep(sts: StateSet[A] ) -> Iterable[A | str]:
                 if s.frames:
                     s.frames.peek().stack.push(v1)
                     yield s
-                else:
-                    yield "ok"
                 
             case jvm.Return(type=None):
                 s.frames.pop()
                 if s.frames:
                     yield s
-                else:
-                    yield "ok"
 
             case jvm.Binary(operant=oper):
                 v2, v1 = frame.stack.pop(), frame.stack.pop()
@@ -208,77 +211,91 @@ def manystep(sts: StateSet[A] ) -> Iterable[A | str]:
                 if v1 is None or v2 is None:
                     break
                 if isinstance(v1, jvm.Value | int):
-                    v1: SignSet = SignSet.abstract(v1.value)
+                    v1: SignSet = SignSet.abstract_value(v1.value)
                 if isinstance(v2, jvm.Value | int):
-                    v2: SignSet = SignSet.abstract(v2.value)
-                if oper == jvm.BinaryOpr.Div:
-                    if '0' in v2.signs:
-                        yield "divide by zero"
-                        return
-                    res = v1.div(v2)
-                elif oper == jvm.BinaryOpr.Add:
-                    res = v1.add(v2)
-                elif oper == jvm.BinaryOpr.Sub:
-                    res = v1.sub(v2)
-                elif oper == jvm.BinaryOpr.Mul:
-                    res = v1.mult(v2)
-                elif oper == jvm.BinaryOpr.Rem:
-                    if '0' in v2.signs:
-                        yield "divide by zero"
-                        return
-                    res = v1.rem(v2)
-                else:
-                    raise NotImplementedError(f"Unhandled integer binary op: {oper}")
-                frame.stack.push(res)
-                frame.pc = frame.pc + 1
-                s.pc = frame.pc
-                yield s
+                    v2: SignSet = SignSet.abstract_value(v2.value)
+
+                for s1 in v1.signs:
+                    for s2 in v2.signs:
+                        s1 = SignSet({s1})
+                        s2 = SignSet({s2})
+                        match oper:
+                            case jvm.BinaryOpr.Div: 
+                                if s2 == '0':
+                                    break
+                                else: 
+                                    res = s1.div(s2) 
+                            case jvm.BinaryOpr.Add:
+                                res = s1.add(s2)
+                            case jvm.BinaryOpr.Sub:
+                                res = s1.sub(s2)
+                            case jvm.BinaryOpr.Mul:
+                                res = s1.mult(s2)
+                            case jvm.BinaryOpr.Rem:
+                                if s2 == '0':
+                                    break 
+                                else:
+                                    res = s1.rem(s2)
+                            case _:
+                                raise NotImplementedError(f"Unhandled integer binary op: {oper}")
+                        frame.stack.push(res) 
+                        frame.pc = PC(frame.pc.method, offset + 1)
+                        s.pc = frame.pc
+                        yield s
+                        s = copy.deepcopy(state)
+                        frame = s.frames.peek()
+
       
             case jvm.Ifz(condition=cond, target=target):
                 v = frame.stack.pop()
 
-                # if not isinstance(v, SignSet):
-                #     v: SignSet = SignSet.abstract(v)
+                if not isinstance(v, SignSet):
+                    v: SignSet = SignSet.abstract_value(v)
 
                 # logger.debug(f"IFZ on {v.signs} with condition {cond}")
                 # logger.debug(f"Signs: {v}")
+
+                temp_target = -1
 
                 for sign in v.signs:
                     match cond:
                         case "eq":
                             if sign == "0" :
-                                frame.pc = PC(frame.pc.method, target)
+                                temp_target = target
                             else:
-                                frame.pc = frame.pc + 1
+                                temp_target = offset + 1
                         case "ne":
                             if sign != "0":
-                                frame.pc = PC(frame.pc.method, target) 
+                                temp_target = target
                             else:
-                                frame.pc = frame.pc + 1
+                                temp_target = offset + 1
                         case "lt":
                             if sign == "-":
-                                frame.pc = PC(frame.pc.method, target)
-                            else:  
-                                frame.pc = frame.pc + 1
+                                temp_target = target
+                            else:
+                                temp_target = offset + 1
                         case "gt":
                             if sign == "+":
-                                frame.pc = PC(frame.pc.method, target)
+                                temp_target = target
                             else:
-                                frame.pc = frame.pc + 1
+                                temp_target = offset + 1
                         case "ge":
                             if sign == "+" or sign == "0":
-                                frame.pc = PC(frame.pc.method, target)
+                                temp_target = target
                             else:
-                                frame.pc = frame.pc + 1
+                                temp_target = offset + 1
                         case "le":
                             if sign == "-" or sign == "0":
-                                frame.pc = PC(frame.pc.method, target)
+                                temp_target = target
                             else:
-                                frame.pc = frame.pc + 1
+                                temp_target = offset + 1
                         case _:
                             raise NotImplementedError(f"Unhandled ifz condition: {cond}")
+                    frame.pc = PC(frame.pc.method, temp_target)
                     s.pc = frame.pc
                     yield s
+                    s = copy.deepcopy(state)
+                    frame = s.frames.peek()
 
 
             case _ : 
@@ -290,7 +307,6 @@ def manystep(sts: StateSet[A] ) -> Iterable[A | str]:
 
 
 
-
 suite = jpamb.Suite()
 bc = Bytecode(suite, dict())
    
@@ -298,30 +314,34 @@ methodid, input = jpamb.getcase()
 logger.info(f"Analyzing method {methodid.extension}\n {methodid} with input {input} and {methodid.methodid.params._elements}")
 
 
-
-
 s = A.initialstate_from_method(methodid)
-sts: StateSet[A] = StateSet[A].initialize(s, PC(methodid, 0))
+sts: StateSet = StateSet.initialize(s, PC(methodid, 0))
 
 logger.info(f"Initial state setup {sts}")
 
 final: set[str] = set()
-MAX_STEPS = 5
+MAX_STEPS = 10
 for i in range(MAX_STEPS):
-  for s in manystep(sts):
-    if isinstance(s, A):
-        logger.info(f"Step {i}, program counter {s.pc.offset}")
-    if isinstance(s, str):
-      logger.info(f"Final state reached: {s}")
-      final.add(s)
-    else:
-      sts |= s
+    new_states = step(sts)
+    logger.info(f"After step {i}, new states: {new_states}")
+    # for s in new_states:
+    #     if isinstance(s, str):
+    #         logger.info(f"Final state reached: {s}")
+    #     else: 
+    #         logger.info(f"Step {i}, program counter {s.pc.offset}")
+    sts.__ior__( new_states)
+    if sts.needswork.__len__() == 0:
+        logger.info(f"No more states to process after {i} steps.")
+        break
+    
+    # for pc, st in sts.per_instruction():
+        # logger.info(f"State at {pc.offset}: {st}")
 
-if len(final) == 0:
-    print("*")
-else: 
-    for f in final:
-        print(f)
+for s in sts.per_inst:
+    logger.info(f"All states at {s.offset}")
+
+print("*")
+
 
 
 
