@@ -25,8 +25,75 @@ jpamb.cases.Calls.callsAssertIf:(Z)V                         (false) -> assertio
 jpamb.cases.Calls.callsAssertIf:(Z)V                         (true) -> ok
 jpamb.cases.Calls.callsAssertIfWithTrue:()V                  () -> ok
 jpamb.cases.Calls.callsAssertTrue:()V                        () -> ok
+jpamb.cases.Conditionals.absoluteValue:(I)V                  (-5) -> ok
+jpamb.cases.Conditionals.absoluteValue:(I)V                  (0) -> ok
+jpamb.cases.Conditionals.absoluteValue:(I)V                  (5) -> ok
+jpamb.cases.Conditionals.andCondition:(ZZ)V                  (false, false) -> ok
+jpamb.cases.Conditionals.andCondition:(ZZ)V                  (false, true) -> ok
+jpamb.cases.Conditionals.andCondition:(ZZ)V                  (true, false) -> ok
+jpamb.cases.Conditionals.andCondition:(ZZ)V                  (true, true) -> ok
+jpamb.cases.Conditionals.comparison:(II)V                    (10, 5) -> assertion error
+jpamb.cases.Conditionals.comparison:(II)V                    (5, 10) -> ok
+jpamb.cases.Conditionals.equalityCheck:(II)V                 (5, 3) -> assertion error
+jpamb.cases.Conditionals.equalityCheck:(II)V                 (5, 5) -> ok
+jpamb.cases.Conditionals.gradeEvaluation:(I)V                (0) -> assertion error
+jpamb.cases.Conditionals.gradeEvaluation:(I)V                (100) -> ok
+jpamb.cases.Conditionals.gradeEvaluation:(I)V                (50) -> assertion error
+jpamb.cases.Conditionals.ifElseChain:(I)V                    (-5) -> ok
+jpamb.cases.Conditionals.ifElseChain:(I)V                    (0) -> ok
+jpamb.cases.Conditionals.ifElseChain:(I)V                    (5) -> ok
+jpamb.cases.Conditionals.leapYear:(I)V                       (2020) -> ok
+jpamb.cases.Conditionals.leapYear:(I)V                       (2021) -> assertion error
+jpamb.cases.Conditionals.max:(II)I                           (3, 5) -> ok
+jpamb.cases.Conditionals.max:(II)I                           (5, 3) -> ok
+jpamb.cases.Conditionals.min:(II)I                           (3, 5) -> ok
+jpamb.cases.Conditionals.min:(II)I                           (5, 3) -> ok
+jpamb.cases.Conditionals.minMaxRange:(III)V                  (5, 3, 8) -> ok
+jpamb.cases.Conditionals.nestedConditions:(ZZZ)V             (true, true, false) -> assertion error
+jpamb.cases.Conditionals.nestedConditions:(ZZZ)V             (true, true, true) -> ok
+jpamb.cases.Conditionals.noShortCircuitBitwise:(II)V         (0, 0) -> divide by zero
+jpamb.cases.Conditionals.noShortCircuitBitwise:(II)V         (1, 0) -> divide by zero
+jpamb.cases.Conditionals.notCondition:(Z)V                   (false) -> ok
+jpamb.cases.Conditionals.notCondition:(Z)V                   (true) -> assertion error
+jpamb.cases.Conditionals.orCondition:(ZZ)V                   (false, false) -> assertion error
+jpamb.cases.Conditionals.orCondition:(ZZ)V                   (false, true) -> ok
+jpamb.cases.Conditionals.orCondition:(ZZ)V                   (true, false) -> ok
+jpamb.cases.Conditionals.orCondition:(ZZ)V                   (true, true) -> ok
+jpamb.cases.Conditionals.rangeCheck:(I)V                     (0) -> assertion error
+jpamb.cases.Conditionals.rangeCheck:(I)V                     (15) -> assertion error
+jpamb.cases.Conditionals.rangeCheck:(I)V                     (5) -> ok
+jpamb.cases.Conditionals.shortCircuitAnd:(II)V               (0, 0) -> ok
+jpamb.cases.Conditionals.shortCircuitAnd:(II)V               (0, 1) -> ok
+jpamb.cases.Conditionals.switchCase:(I)V                     (1) -> ok
+jpamb.cases.Conditionals.switchCase:(I)V                     (2) -> ok
+jpamb.cases.Conditionals.switchCase:(I)V                     (3) -> ok
+jpamb.cases.Conditionals.switchCase:(I)V                     (4) -> assertion error
+jpamb.cases.Conditionals.switchWithFallthrough:(I)V          (10) -> ok
+jpamb.cases.Conditionals.switchWithFallthrough:(I)V          (5) -> assertion error
+jpamb.cases.Conditionals.ternaryOperator:(I)V                (10) -> ok
+jpamb.cases.Conditionals.ternaryOperator:(I)V                (5) -> assertion error
+jpamb.cases.Exceptions.badCast:()V                           () -> class cast
+jpamb.cases.Exceptions.catchException:()V                    () -> ok
+jpamb.cases.Exceptions.checkBeforeDeref:()V                  () -> ok
+jpamb.cases.Exceptions.conditionalNull:(Z)V                  (false) -> null pointer
+jpamb.cases.Exceptions.conditionalNull:(Z)V                  (true) -> ok
+jpamb.cases.Exceptions.dereferenceNull:()V                   () -> null pointer
+jpamb.cases.Exceptions.emptyString:()V                       () -> ok
+jpamb.cases.Exceptions.goodCast:()V                          () -> ok
+jpamb.cases.Exceptions.initializedArray:()V                  () -> ok
+jpamb.cases.Exceptions.multipleNullChecks:()V                () -> ok
+jpamb.cases.Exceptions.negativeArraySize:(I)V                (-5) -> negative array size
+jpamb.cases.Exceptions.negativeArraySize:(I)V                (10) -> ok
+jpamb.cases.Exceptions.nullCheck:(Ljava/lang/String;)V       ("test") -> ok
+jpamb.cases.Exceptions.nullInArray:()V                       () -> null pointer
+jpamb.cases.Exceptions.nullString:()V                        () -> null pointer
+jpamb.cases.Exceptions.sometimesNull:(I)V                    (0) -> null pointer
+jpamb.cases.Exceptions.sometimesNull:(I)V                    (5) -> ok
+jpamb.cases.Exceptions.uncaughtException:()V                 () -> divide by zero
+jpamb.cases.Loops.forNo:()V                                  () -> ok
 jpamb.cases.Loops.forever:()V                                () -> *
-jpamb.cases.Loops.neverAsserts:()V                           () -> *
+jpamb.cases.Loops.forlong:()V                                () -> *
+jpamb.cases.Loops.neverAsserts:()V                           () -> ok
 jpamb.cases.Loops.neverDivides:()I                           () -> *
 jpamb.cases.Loops.terminates:()V                             () -> assertion error
 jpamb.cases.Signs.addDoubles:(DD)V                           (-1.0, -2.0) -> ok
@@ -40,8 +107,8 @@ jpamb.cases.Signs.classifySign:(I)V                          (0) -> ok
 jpamb.cases.Signs.classifySign:(I)V                          (5) -> ok
 jpamb.cases.Signs.compareDoubles:(DD)V                       (1.0, 2.5) -> ok
 jpamb.cases.Signs.compareDoubles:(DD)V                       (3.0, 3.0) -> assertion error
-jpamb.cases.Signs.concatStrings:(Ljava/lang/String;Ljava/lang/String;)V (foo, bar) -> ok
-jpamb.cases.Signs.concatStrings:(Ljava/lang/String;Ljava/lang/String;)V (hi, baz) -> ok
+jpamb.cases.Signs.concatStrings:(Ljava/lang/String;Ljava/lang/String;)V ("foo", "bar") -> ok
+jpamb.cases.Signs.concatStrings:(Ljava/lang/String;Ljava/lang/String;)V ("hi", "baz") -> ok
 jpamb.cases.Signs.requirePositive:(I)V                       (-5) -> assertion error
 jpamb.cases.Signs.requirePositive:(I)V                       (0) -> assertion error
 jpamb.cases.Signs.requirePositive:(I)V                       (5) -> ok
@@ -76,5 +143,36 @@ jpamb.cases.Simple.justReturn:()I                            () -> ok
 jpamb.cases.Simple.justReturnNothing:()V                     () -> ok
 jpamb.cases.Simple.multiError:(Z)I                           (false) -> assertion error
 jpamb.cases.Simple.multiError:(Z)I                           (true) -> divide by zero
+jpamb.cases.Strings.charAt:(Ljava/lang/String;I)V            ("hello", -1) -> out of bounds
+jpamb.cases.Strings.charAt:(Ljava/lang/String;I)V            ("hello", 0) -> ok
+jpamb.cases.Strings.charAt:(Ljava/lang/String;I)V            ("hello", 5) -> out of bounds
+jpamb.cases.Strings.compareStrings:(Ljava/lang/String;Ljava/lang/String;)V ("abc", "abc") -> ok
+jpamb.cases.Strings.compareStrings:(Ljava/lang/String;Ljava/lang/String;)V ("abc", "xyz") -> assertion error
+jpamb.cases.Strings.concatenation:(Ljava/lang/String;Ljava/lang/String;)V ("", "") -> ok
+jpamb.cases.Strings.concatenation:(Ljava/lang/String;Ljava/lang/String;)V ("abc", "def") -> ok
+jpamb.cases.Strings.contains:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "ell") -> ok
+jpamb.cases.Strings.contains:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "xyz") -> assertion error
+jpamb.cases.Strings.emptyStringLength:()V                    () -> ok
+jpamb.cases.Strings.endsWith:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "o") -> ok
+jpamb.cases.Strings.endsWith:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "x") -> assertion error
+jpamb.cases.Strings.equals:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "hello") -> ok
+jpamb.cases.Strings.equals:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "world") -> assertion error
+jpamb.cases.Strings.equalsIgnoreCase:(Ljava/lang/String;Ljava/lang/String;)V ("Hello", "hello") -> ok
+jpamb.cases.Strings.equalsIgnoreCase:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "world") -> assertion error
+jpamb.cases.Strings.indexOf:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "l") -> ok
+jpamb.cases.Strings.indexOfNotFound:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "x") -> assertion error
+jpamb.cases.Strings.split:(Ljava/lang/String;Ljava/lang/String;)V ("hello world", " ") -> ok
+jpamb.cases.Strings.startsWith:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "h") -> ok
+jpamb.cases.Strings.startsWith:(Ljava/lang/String;Ljava/lang/String;)V ("hello", "x") -> assertion error
+jpamb.cases.Strings.stringBuilder:()V                        () -> ok
+jpamb.cases.Strings.stringComparison:()V                     () -> ok
+jpamb.cases.Strings.stringLength:()V                         () -> ok
+jpamb.cases.Strings.substring:(Ljava/lang/String;II)V        ("hello", 0, 10) -> out of bounds
+jpamb.cases.Strings.substring:(Ljava/lang/String;II)V        ("hello", 1, 4) -> ok
+jpamb.cases.Strings.toLowerCase:(Ljava/lang/String;)V        ("HELLO") -> ok
+jpamb.cases.Strings.toLowerCase:(Ljava/lang/String;)V        ("hello") -> ok
+jpamb.cases.Strings.toUpperCase:(Ljava/lang/String;)V        ("HELLO") -> ok
+jpamb.cases.Strings.toUpperCase:(Ljava/lang/String;)V        ("hello") -> ok
+jpamb.cases.Strings.trim:(Ljava/lang/String;)V               ("  trim  ") -> ok
 jpamb.cases.Tricky.collatz:(I)V                              (0) -> assertion error
 jpamb.cases.Tricky.collatz:(I)V                              (24) -> ok

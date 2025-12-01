@@ -446,7 +446,7 @@
                     "values": {
                       "value": {
                         "type": "string",
-                        "value": "(true, false) -> assertion error"
+                        "value": "(true, false) -> ok"
                       }
                     }
                   }
@@ -3436,7 +3436,7 @@
                     "values": {
                       "value": {
                         "type": "string",
-                        "value": "(0, 0) -> divide by zero"
+                        "value": "(0, 0) -> ok"
                       }
                     }
                   }
@@ -3558,7 +3558,7 @@
                     "values": {
                       "value": {
                         "type": "string",
-                        "value": "(1, 0) -> ok"
+                        "value": "(1, 0) -> divide by zero"
                       }
                     }
                   }
