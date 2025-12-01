@@ -1,3 +1,4 @@
+import sys
 from typing import Iterable, TypeVar
 import copy
 import jpamb
@@ -178,8 +179,8 @@ def step(sts: StateSet ) -> Iterable[A | str]:
         s = copy.deepcopy(state)
         frame = s.frames.peek()
         offset = frame.pc.offset
-        logger.info(f"STEP {pc} \n BC: {bc} \n STATE: {state} \n FRAME: {frame}")
-        logger.info(f"STEP {bc[pc]}")
+        # logger.info(f"STEP {pc} \n BC: {bc} \n STATE: {state} \n FRAME: {frame}")
+        # logger.info(f"STEP {bc[pc]}")
         
         match bc[pc]:
             case jvm.Get(field=field):
@@ -209,10 +210,8 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                     
             case jvm.Load(type=t, index=i):
                 v = frame.locals[i]
-                if isinstance(t, jvm.Int):
-                    frame.stack.push(v)
-                elif isinstance(t, jvm.Reference):
-                    frame.stack.push(v)
+                if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference) or isinstance(t, jvm.Double):
+                    frame.stack.push(SignSet.abstract_value(v))
                 else:
                     raise NotImplementedError(f"Unhandled load type: {t}")
                 frame.pc = PC(frame.pc.method, offset + 1)
@@ -222,7 +221,7 @@ def step(sts: StateSet ) -> Iterable[A | str]:
             case jvm.Goto(target=t):
                 frame.pc = PC(frame.pc.method, t)
                 yield state
-            
+
 
             case jvm.Return(type=jvm.Int()):
                 v1 = frame.stack.pop()
@@ -238,6 +237,18 @@ def step(sts: StateSet ) -> Iterable[A | str]:
 
             case jvm.Throw():
                 break
+
+            case jvm.Incr(index=i, amount=amt):
+                v = frame.locals[i]
+                if not isinstance(v, SignSet):
+                    v: SignSet = SignSet.abstract_value(v.value)
+                if not isinstance(amt, SignSet):
+                    amt: SignSet = SignSet.abstract_value(amt)
+                
+                v = v.add(SignSet.abstract_value(amt))
+                frame.pc = PC(frame.pc.method, offset + 1)
+                s.pc = frame.pc
+                return state
 
             case jvm.Binary(operant=oper):
                 v2, v1 = frame.stack.pop(), frame.stack.pop()
@@ -357,7 +368,6 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                             raise NotImplementedError(f"Unhandled ifz condition: {cond}")
                     frame.pc = PC(frame.pc.method, temp_target)
                     s.pc = frame.pc
-                    logger.info(f"TEMP_TARGET: {temp_target}")
                     yield s
                     s = copy.deepcopy(state)
                     frame = s.frames.peek()
@@ -376,19 +386,21 @@ suite = jpamb.Suite()
 bc = Bytecode(suite, dict())
    
 methodid, input = jpamb.getcase()
-logger.info(f"Analyzing method {methodid.extension}\n {methodid} with input {input} and {methodid.methodid.params._elements}")
+# logger.info(f"Analyzing method {methodid.extension}\n {methodid} with input {input} and {methodid.methodid.params._elements}")
 
 
 s = A.initialstate_from_method(methodid)
 sts: StateSet = StateSet.initialize(s, PC(methodid, 0))
 
-logger.info(f"Initial state setup {sts}")
+# logger.info(f"Initial state setup {sts}")
 
 final: set[str] = set()
 MAX_STEPS = 10
-for i in range(MAX_STEPS):
+i = 0
+while True:
     new_states = step(sts)
-    logger.info(f"After step {i}, new states: {new_states}")
+    i += 1
+    # logger.info(f"After step {i}, new states: {new_states}")
     # for s in new_states:
     #     if isinstance(s, str):
     #         logger.info(f"Final state reached: {s}")
@@ -399,14 +411,37 @@ for i in range(MAX_STEPS):
         logger.info(f"No more states to process after {i} steps.")
         break
     
-    # for pc, st in sts.per_instruction():
-        # logger.info(f"State at {pc.offset}: {st}")
+if isinstance(sts, StateSet):
+    all_states = sts.per_inst.values()
+    for state in all_states:
+        logger.success(f"{state.pc.offset}")
 
-all_pc = []
-for s in sts.per_inst:
-    all_pc.append(s.offset)
+# all_pc = list(sts.per_inst.keys())
 
-logger.info(f"All reached program counters: {sorted(all_pc)}")
+# # Sort by method then offset
+# all_pc_sorted = sorted(all_pc, key=lambda pc: (pc.method, pc.offset))
+
+# # Optional: remove default console sink
+# logger.remove()
+
+# # Console (keep if you still want terminal output)
+# logger.add(sys.stderr, level="DEBUG")
+
+# # File sink: everything DEBUG and above into a .txt file
+# logger.add(
+#     "analysis_log.txt",
+#     level="DEBUG",
+#     rotation="10 MB",
+#     retention="10 days",
+#     encoding="utf-8",
+# )
+
+# # Log in order of method + offset
+# for pc in all_pc_sorted:
+#     # logger.success(f"{bc[pc]}")
+#     logger.success(f"PC: {pc}")
+
+# logger.success("Analysis complete.")
 
 print("*")
 
