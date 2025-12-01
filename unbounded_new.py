@@ -56,6 +56,7 @@ class PC:
     def __str__(self):
         return f"{self.method}:{self.offset}"
     
+    
 @dataclass
 class Bytecode:
     suite: jpamb.Suite
@@ -140,6 +141,7 @@ class StateSet:
 
     # sts |= sts
     def __ior__(self, sts: Iterable[A]) -> "StateSet":
+        logger.debug(f"MERGE {sts}")
         pc_temp  = set()
         for state in sts:
             logger.info(f"Merging state: {state}")
@@ -149,10 +151,10 @@ class StateSet:
             else:
                 old = self.per_inst[state.pc]
                 self.per_inst[state.pc] |= state
-                logger.debug(f"Merged state at {old != self.per_inst[state.pc]}")
+                # logger.debug(f"Merged state at {old != self.per_inst[state.pc]}")
                 if old != self.per_inst[state.pc]:
                     pc_temp.add(state.pc)
-        logger.info(f"States needing work: {pc_temp}")
+        logger.debug(f"States needing work: {pc_temp}")
         self.needswork = pc_temp
         return self
   
@@ -164,7 +166,7 @@ def step(sts: StateSet ) -> Iterable[A | str]:
         s = copy.deepcopy(state)
         frame = s.frames.peek()
         offset = frame.pc.offset
-        # logger.info(f"STEP {pc} \n BC: {bc} \n STATE: {state} \n FRAME: {frame}")
+        logger.info(f"STEP {pc} \n BC: {bc} \n STATE: {state} \n FRAME: {frame}")
         logger.info(f"STEP {bc[pc]}")
         
         match bc[pc]:
@@ -180,7 +182,19 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                 frame.pc = PC(frame.pc.method, offset + 1)
                 s.pc = frame.pc
                 yield s
-                
+
+            case jvm.Store(type=t, index=i):
+                v = frame.stack.pop()
+                if isinstance(t, jvm.Int) or isinstance(t, jvm.Reference) or isinstance(t, jvm.Double):
+                    frame.locals[i] = v
+                elif isinstance(t, SignSet):
+                    frame.locals[i] = v
+                else:
+                    raise NotImplementedError(f"Unhandled store type: {t}")
+                frame.pc = PC(frame.pc.method, offset + 1)
+                s.pc = frame.pc
+                yield s
+                    
             case jvm.Load(type=t, index=i):
                 v = frame.locals[i]
                 if isinstance(t, jvm.Int):
@@ -192,6 +206,11 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                 frame.pc = PC(frame.pc.method, offset + 1)
                 s.pc = frame.pc
                 yield s
+
+            case jvm.Goto(target=t):
+                frame.pc = PC(frame.pc.method, t)
+                yield state
+            
 
             case jvm.Return(type=jvm.Int()):
                 v1 = frame.stack.pop()
@@ -205,9 +224,12 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                 if s.frames:
                     yield s
 
+            case jvm.Throw():
+                break
+
             case jvm.Binary(operant=oper):
                 v2, v1 = frame.stack.pop(), frame.stack.pop()
-                logger.debug(f"Binary operation {oper} on {v1} and {v2}, types {type(v1)}, {type(v2)}")
+                # logger.debug(f"Binary operation {oper} on {v1} and {v2}, types {type(v1)}, {type(v2)}")
                 if v1 is None or v2 is None:
                     break
                 if isinstance(v1, jvm.Value | int):
@@ -217,25 +239,53 @@ def step(sts: StateSet ) -> Iterable[A | str]:
 
                 for s1 in v1.signs:
                     for s2 in v2.signs:
-                        s1 = SignSet({s1})
+                        s1 = SignSet(s1)
                         s2 = SignSet({s2})
                         match oper:
                             case jvm.BinaryOpr.Div: 
                                 if s2 == '0':
                                     break
-                                else: 
-                                    res = s1.div(s2) 
+                                elif s1 == '0':
+                                    res = SignSet({'0'})
+                                elif s1 == s2 :
+                                    res = SignSet({'+'})
+                                else:
+                                    res = SignSet({'-'})
                             case jvm.BinaryOpr.Add:
-                                res = s1.add(s2)
+                                if s1 == '0':
+                                    res = s2
+                                elif s2 == '0':
+                                    res = s1
+                                elif s1 == s2:
+                                    res = s1
+                                else:
+                                    res = SignSet({'+', '-', '0'})
                             case jvm.BinaryOpr.Sub:
-                                res = s1.sub(s2)
+                                if s2 == '0':
+                                    res = s1
+                                elif s1 == '0':
+                                    if s2 == '+':
+                                        res = SignSet({'-'})
+                                    elif s2 == '-':
+                                        res = SignSet({ '+'})
+                                elif s1 == s2:
+                                    res = SignSet({'+', '-', '0'})
+                                else: 
+                                    res = s1
                             case jvm.BinaryOpr.Mul:
-                                res = s1.mult(s2)
+                                if s1 == '0' or s2 == '0':
+                                    res = SignSet({'0'})
+                                elif s1 == s2:
+                                    res = SignSet({'+'})
+                                else:
+                                    res = SignSet({'-'})
                             case jvm.BinaryOpr.Rem:
                                 if s2 == '0':
-                                    break 
+                                    break
+                                elif s1 == '0':
+                                    res = SignSet({'0'})
                                 else:
-                                    res = s1.rem(s2)
+                                    res = s1
                             case _:
                                 raise NotImplementedError(f"Unhandled integer binary op: {oper}")
                         frame.stack.push(res) 
@@ -248,6 +298,7 @@ def step(sts: StateSet ) -> Iterable[A | str]:
       
             case jvm.Ifz(condition=cond, target=target):
                 v = frame.stack.pop()
+                logger.info(f"IFZ on value {v} with condition {cond}, and target {target}")
 
                 if not isinstance(v, SignSet):
                     v: SignSet = SignSet.abstract_value(v)
@@ -293,6 +344,7 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                             raise NotImplementedError(f"Unhandled ifz condition: {cond}")
                     frame.pc = PC(frame.pc.method, temp_target)
                     s.pc = frame.pc
+                    logger.info(f"TEMP_TARGET: {temp_target}")
                     yield s
                     s = copy.deepcopy(state)
                     frame = s.frames.peek()
@@ -329,7 +381,7 @@ for i in range(MAX_STEPS):
     #         logger.info(f"Final state reached: {s}")
     #     else: 
     #         logger.info(f"Step {i}, program counter {s.pc.offset}")
-    sts.__ior__( new_states)
+    sts |= new_states
     if sts.needswork.__len__() == 0:
         logger.info(f"No more states to process after {i} steps.")
         break

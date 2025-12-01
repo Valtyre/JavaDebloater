@@ -12,6 +12,10 @@ Sign: TypeAlias = Literal["+", "-", "0"]
 class SignSet:
     signs: set[Sign]
 
+    def __ior__(self, other: "SignSet") -> "SignSet":
+        self.signs |= other.signs
+        return self
+
     def sing_to_signset(sign: Sign) -> "SignSet":
         return SignSet({sign})
 
@@ -74,10 +78,7 @@ class SignSet:
             return v
 
         if isinstance(v, bool):
-            if not v:
-                return cls(frozenset({'0'}))
-            else:
-                return cls(frozenset({'+', '-'}))
+            return cls.top()
 
         if isinstance(v, int):
             return cls.from_int(v)
