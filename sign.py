@@ -71,22 +71,25 @@ class SignSet:
             return cls(frozenset({'0'}))
         return cls(frozenset({'+'}))
 
-    @classmethod
-    def abstract_value(cls, v) -> "SignSet":
-        
-        if isinstance(v, SignSet):
-            return v
-
-        if isinstance(v, bool):
-            return cls.top()
-
+    @staticmethod
+    def abstract_value(v):
         if isinstance(v, int):
-            return cls.from_int(v)
+            if v < 0: return SignSet({"-"})
+            if v == 0: return SignSet({"0"})
+            return SignSet({"+"})
 
-        if isinstance(v, float):
-            return cls.from_float(v)
+        if isinstance(v, jvm.Value):
+            if isinstance(v.type, jvm.Int):
+                return SignSet.abstract_value(v.value)
 
-        return cls.bottom()
+            if isinstance(v.type, jvm.Boolean):
+                return SignSet({"0"}) if not v.value else SignSet({ "+" })
+
+            if isinstance(v.type, jvm.Double) or isinstance(v.type, jvm.Float):
+                if v.value < 0.0: return SignSet({"-"})
+                if v.value == 0.0: return SignSet({"0"})
+                return SignSet({ "+" })
+        return SignSet.top()
     
     def add(self, other: "SignSet") -> "SignSet":
         result_signs = set()

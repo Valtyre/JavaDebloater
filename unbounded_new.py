@@ -100,18 +100,27 @@ class A: # Abstract State
                 frame.locals[i] = v
         return A( Stack.empty().push(frame), PC(methodid, 0))
     
-    def __ior__(self, other: "A") -> None:
+    def __ior__(self, other: "A") -> "A":
         assert self.pc == other.pc, "Cannot merge states with different program counters"
-        for i in range(len(self.frames.peek().locals)-1):
-            if isinstance(other.frames.peek().locals[i], SignSet) and isinstance(self.frames.peek().locals[i], SignSet):
-                self.frames.peek().locals[i] |= other.frames.peek().locals[i]
+
+        # merge locals
+        for i in range(len(self.frames.peek().locals)):   # no -1
+            l_self = self.frames.peek().locals[i]
+            l_other = other.frames.peek().locals[i]
+            if isinstance(l_self, SignSet) and isinstance(l_other, SignSet):
+                l_self |= l_other
             else:
-                self.frames.peek().locals[i] = other.frames.peek().locals[i]
-        for i in range(len(self.frames.peek().stack.items)-1):
-            if isinstance(other.frames.peek().stack.items[i], SignSet) and isinstance(self.frames.peek().stack.items[i], SignSet):
-                self.frames.peek().stack.items[i] |= other.frames.peek().stack.items[i]
+                self.frames.peek().locals[i] = l_other
+
+        # merge stack
+        for i in range(len(self.frames.peek().stack.items)):  # no -1
+            s_self = self.frames.peek().stack.items[i]
+            s_other = other.frames.peek().stack.items[i]
+            if isinstance(s_self, SignSet) and isinstance(s_other, SignSet):
+                s_self |= s_other
             else:
-                self.frames.peek().stack.items[i] = other.frames.peek().stack.items[i]
+                self.frames.peek().stack.items[i] = s_other
+
         return self
     
     def advance_pc(self, delta: int = 1):
@@ -141,20 +150,23 @@ class StateSet:
 
     # sts |= sts
     def __ior__(self, sts: Iterable[A]) -> "StateSet":
-        logger.debug(f"MERGE {sts}")
+        # logger.debug(f"MERGE {sts}")
         pc_temp  = set()
         for state in sts:
-            logger.info(f"Merging state: {state}")
+            # logger.info(f"Merging state: {state}")
             if state.pc not in self.per_inst:
+                # first time we see this pc
                 self.per_inst[state.pc] = state
                 pc_temp.add(state.pc)
             else:
-                old = self.per_inst[state.pc]
+                # keep an immutable snapshot of "before"
+                old = copy.deepcopy(self.per_inst[state.pc])
+                # in‑place merge
                 self.per_inst[state.pc] |= state
-                # logger.debug(f"Merged state at {old != self.per_inst[state.pc]}")
+                # if contents actually changed, schedule pc
                 if old != self.per_inst[state.pc]:
                     pc_temp.add(state.pc)
-        logger.debug(f"States needing work: {pc_temp}")
+        # logger.debug(f"States needing work: {pc_temp}")
         self.needswork = pc_temp
         return self
   
@@ -307,6 +319,7 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                 # logger.debug(f"Signs: {v}")
 
                 temp_target = -1
+            
 
                 for sign in v.signs:
                     match cond:
@@ -389,8 +402,11 @@ for i in range(MAX_STEPS):
     # for pc, st in sts.per_instruction():
         # logger.info(f"State at {pc.offset}: {st}")
 
+all_pc = []
 for s in sts.per_inst:
-    logger.info(f"All states at {s.offset}")
+    all_pc.append(s.offset)
+
+logger.info(f"All reached program counters: {sorted(all_pc)}")
 
 print("*")
 
