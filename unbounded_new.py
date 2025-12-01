@@ -450,14 +450,16 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                 # Pop right, then left (same order as your concrete interpreter)
                 v2 = frame.stack.pop()
                 v1 = frame.stack.pop()
-
                 # --- Normalise both to SignSet ---
 
                 if not isinstance(v1, SignSet):
-                    v: SignSet = SignSet.abstract_value(v)
+                    v1: SignSet = SignSet.abstract_value(v1)
                     
                 if not isinstance(v2, SignSet):
-                    v: SignSet = SignSet.abstract_value(v)
+                    v2: SignSet = SignSet.abstract_value(v2)
+                
+                logger.info(f"IF on values {v1} and {v2} with condition {cond}, and target {target}")
+
 
                 def has(s: SignSet, sym: str) -> bool:
                     return sym in s.signs
@@ -478,18 +480,33 @@ def step(sts: StateSet ) -> Iterable[A | str]:
                                 else:
                                     temp_target = offset + 1
                             case "lt":
-                                if (sign1 == '-' or (sign1 == '0' and sign2 != '-') or not (sign1 == '+' and sign2 == '+')):
+                                if (sign1== '-'or sign2 == '+'):
                                     temp_target = target
                                 else:
                                     temp_target = offset + 1
-
-
-    
-                frame.pc = PC(frame.pc.method, temp_target)
-                s.pc = frame.pc
-                yield s
-                s = copy.deepcopy(state)
-                frame = s.frames.peek()
+                            case "gt":
+                                if (sign1== '+'or sign2 == '-'):
+                                    temp_target = target
+                                else:
+                                    temp_target = offset + 1
+                            case "ge":
+                                if (sign1== '+' or sign2 == '-') or (sign1==sign2): 
+                                    temp_target = target
+                                else:
+                                    temp_target = offset + 1
+                            case "le":
+                                if (sign1== '-' or sign2 == '+') or (sign1==sign2):
+                                    temp_target = target
+                                else:
+                                    temp_target = offset + 1 
+                            case _:
+                                raise NotImplementedError(f"Unhandled if condition: {cond}")
+                        logger.info(f"IF branch for signs {sign1}, {sign2} goes to {temp_target}, method {frame.pc.method}")
+                        frame.pc = PC(frame.pc.method, temp_target)
+                        s.pc = frame.pc
+                        yield s
+                        s = copy.deepcopy(state)
+                        frame = s.frames.peek()
 
 
 
@@ -534,7 +551,7 @@ while True:
 if isinstance(sts, StateSet):
     all_states = sts.per_inst.values()
     for state in all_states:
-        logger.success(f"{state.pc.offset}")
+        logger.success(f"{bc[state.pc]} \n STATE: {state} \n FRAME: {state.frames.peek()}")
 
 # all_pc = list(sts.per_inst.keys())
 
